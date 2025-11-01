@@ -194,60 +194,27 @@ $related_query = new WP_Query($related_args);
 // 公開日・更新日
 $published_date = get_the_date('c');
 $modified_date = get_the_modified_date('c');
-?>
 
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    
-    <!-- SEO Meta Tags -->
-    <title><?php echo esc_html($seo_title . ' | ' . get_bloginfo('name')); ?></title>
-    <meta name="description" content="<?php echo esc_attr($meta_description); ?>">
-    <meta name="keywords" content="<?php echo esc_attr(implode(',', $seo_keywords)); ?>">
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    <meta name="author" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-    <link rel="canonical" href="<?php echo esc_url(get_permalink()); ?>">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="<?php echo esc_url(get_permalink()); ?>">
-    <meta property="og:title" content="<?php echo esc_attr($seo_title); ?>">
-    <meta property="og:description" content="<?php echo esc_attr($meta_description); ?>">
-    <meta property="og:image" content="<?php echo esc_url($og_image); ?>">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:site_name" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-    <meta property="og:locale" content="ja_JP">
-    <meta property="article:published_time" content="<?php echo $published_date; ?>">
-    <meta property="article:modified_time" content="<?php echo $modified_date; ?>">
-    <meta property="article:author" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-    <?php foreach ($taxonomies['categories'] as $cat): ?>
-    <meta property="article:section" content="<?php echo esc_attr($cat->name); ?>">
-    <?php endforeach; ?>
-    <?php foreach ($taxonomies['tags'] as $tag): ?>
-    <meta property="article:tag" content="<?php echo esc_attr($tag->name); ?>">
-    <?php endforeach; ?>
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="<?php echo esc_url(get_permalink()); ?>">
-    <meta name="twitter:title" content="<?php echo esc_attr($seo_title); ?>">
-    <meta name="twitter:description" content="<?php echo esc_attr($meta_description); ?>">
-    <meta name="twitter:image" content="<?php echo esc_url($og_image); ?>">
-    <meta name="twitter:site" content="@joseikin_insight">
-    <meta name="twitter:creator" content="@joseikin_insight">
-    
-    <!-- Preconnect for Performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Alternate Links -->
-    <link rel="alternate" type="application/rss+xml" title="<?php echo esc_attr(get_bloginfo('name')); ?> RSS Feed" href="<?php bloginfo('rss2_url'); ?>">
-    
-    <?php wp_head(); ?>
+/**
+ * SEO メタタグ出力について
+ * 
+ * NOTE: 以下のメタタグはwp_head()経由でSEOプラグインまたはテーマのSEO機能から
+ * 一元的に出力されるため、ここでは重複を避けるため削除しています。
+ * 
+ * 削除したメタタグ:
+ * - <!DOCTYPE html> および <html> タグ
+ * - <head> セクション全体
+ * - title タグ
+ * - meta description, keywords, robots
+ * - canonical link
+ * - Open Graph tags (og:*)
+ * - Twitter Card tags (twitter:*)
+ * - preconnect, alternate links
+ * 
+ * これらのタグはheader.phpのwp_head()によって適切に出力されます。
+ * header.phpがHTMLヘッダー全体を管理しています。
+ */
+?>
     
     <style>
     /* モバイル検索入力ズーム防止 - viewport meta制御の代わりにフォントサイズで対応 */

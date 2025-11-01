@@ -74,50 +74,27 @@ $breadcrumbs = [
     ['name' => '助成金・補助金検索', 'url' => get_post_type_archive_link('grant')],
     ['name' => $prefecture_name, 'url' => '']
 ];
-?>
 
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    
-    <!-- SEO Meta Tags -->
-    <title><?php echo esc_html($page_title); ?></title>
-    <meta name="title" content="<?php echo esc_attr($page_title); ?>">
-    <meta name="description" content="<?php echo esc_attr($page_description); ?>">
-    <meta name="keywords" content="<?php echo esc_attr($prefecture_name); ?>,助成金,補助金,<?php echo $current_year; ?>年度,申請,募集,中小企業,個人事業主,スタートアップ,<?php echo esc_attr($region_display_name); ?>">
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    <meta name="author" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-    <meta name="geo.region" content="JP">
-    <meta name="geo.placename" content="<?php echo esc_attr($prefecture_name); ?>">
-    <link rel="canonical" href="<?php echo esc_url($canonical_url); ?>">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="<?php echo esc_url($canonical_url); ?>">
-    <meta property="og:title" content="<?php echo esc_attr($page_title); ?>">
-    <meta property="og:description" content="<?php echo esc_attr($page_description); ?>">
-    <meta property="og:image" content="<?php echo esc_url($og_image); ?>">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:site_name" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-    <meta property="og:locale" content="ja_JP">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="<?php echo esc_url($canonical_url); ?>">
-    <meta name="twitter:title" content="<?php echo esc_attr($page_title); ?>">
-    <meta name="twitter:description" content="<?php echo esc_attr($page_description); ?>">
-    <meta name="twitter:image" content="<?php echo esc_url($og_image); ?>">
-    
-    <!-- Preconnect -->
-    <link rel="preconnect" href="<?php echo esc_url(admin_url()); ?>">
-    <link rel="dns-prefetch" href="<?php echo esc_url(admin_url()); ?>">
-    
-    <?php wp_head(); ?>
-</head>
+/**
+ * SEO メタタグ出力について
+ * 
+ * NOTE: 以下のメタタグはwp_head()経由でSEOプラグインまたはテーマのSEO機能から
+ * 一元的に出力されるため、ここでは重複を避けるため削除しています。
+ * 
+ * 削除したメタタグ:
+ * - <!DOCTYPE html> および <html> タグ
+ * - <head> セクション全体
+ * - title タグ
+ * - meta description, keywords, robots, author, geo.*
+ * - canonical link
+ * - Open Graph tags (og:*)
+ * - Twitter Card tags (twitter:*)
+ * - preconnect, dns-prefetch
+ * 
+ * これらのタグはheader.phpのwp_head()によって適切に出力されます。
+ * header.phpがHTMLヘッダー全体を管理しています。
+ */
+?>
 
 <!-- 構造化データ（JSON-LD） -->
 <script type="application/ld+json">
@@ -641,9 +618,26 @@ $breadcrumbs = [
                 <p>検索条件を変更して再度お試しください。</p>
             </div>
 
-            <!-- ページネーション -->
-            <div class="pagination-wrapper" id="pagination-wrapper" style="display: none;">
-                <nav class="pagination" id="pagination"></nav>
+            <!-- ページネーション（SEO対応：クロール可能なリンク形式） -->
+            <div class="pagination-wrapper" id="pagination-wrapper">
+                <?php
+                // WordPress標準のページネーション（クロール可能な<a>タグを生成）
+                $big = 999999999;
+                
+                echo paginate_links( array(
+                    'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+                    'format' => '?paged=%#%',
+                    'current' => max( 1, get_query_var('paged') ),
+                    'total' => $query->max_num_pages,
+                    'type' => 'plain',
+                    'prev_text' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 前へ',
+                    'next_text' => '次へ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+                    'mid_size' => 2,
+                    'end_size' => 1,
+                    'aria_current' => 'page',
+                    'before_page_number' => '<span class="screen-reader-text">ページ </span>',
+                ) );
+                ?>
             </div>
         </div>
     </section>
@@ -1402,53 +1396,71 @@ $breadcrumbs = [
     margin: 0;
 }
 
+/* ===== Pagination（SEO対応：クロール可能なリンク形式） ===== */
 .pagination-wrapper {
+    margin-top: 60px;
     display: flex;
     justify-content: center;
-    margin-top: 40px;
+    padding: 20px 0;
 }
 
-.pagination {
-    display: flex;
+.pagination-wrapper .page-numbers {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--color-secondary);
-    border: 2px solid var(--color-primary);
-    border-radius: 8px;
-    padding: 12px 20px;
-}
-
-.pagination-btn {
-    min-width: 40px;
-    height: 40px;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
     padding: 0 12px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
+    margin: 0 4px;
+    border: 2px solid var(--color-gray-300);
+    border-radius: var(--border-radius);
+    background: var(--color-secondary);
+    color: var(--color-gray-700);
     font-size: 14px;
     font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.pagination-wrapper .page-numbers:hover {
+    border-color: var(--color-primary);
     color: var(--color-primary);
-    cursor: pointer;
-    transition: all 0.2s;
+    background: var(--color-gray-50);
 }
 
-.pagination-btn:hover:not(:disabled) {
-    background: var(--color-gray-100);
-}
-
-.pagination-btn.active {
+.pagination-wrapper .page-numbers.current {
     background: var(--color-primary);
+    border-color: var(--color-primary);
     color: var(--color-secondary);
+    cursor: default;
 }
 
-.pagination-btn:disabled {
-    color: var(--color-gray-400);
-    cursor: not-allowed;
+.pagination-wrapper .page-numbers.dots {
+    border: none;
+    background: transparent;
+    cursor: default;
 }
 
-.pagination-ellipsis {
-    padding: 0 8px;
-    color: var(--color-gray-400);
+.pagination-wrapper .prev,
+.pagination-wrapper .next {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-wrapper .prev svg,
+.pagination-wrapper .next svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+    .pagination-wrapper .page-numbers {
+        min-width: 40px;
+        height: 40px;
+        font-size: 13px;
+    }
 }
 
 /* ===== Related Section ===== */

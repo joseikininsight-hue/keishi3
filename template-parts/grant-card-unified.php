@@ -207,9 +207,6 @@ if ($grant_difficulty === 'easy') {
 if (empty($recommend_reasons)) {
     $recommend_reasons[] = '新着情報';
 }
-
-// AI用Nonce生成
-$ai_nonce = wp_create_nonce('gi_ajax_nonce');
 ?>
 
 <style>
@@ -284,6 +281,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     position: relative;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    isolation: isolate;
 }
 
 .grant-card-list-portal::before {
@@ -391,6 +389,9 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     color: inherit;
     text-decoration: none;
     transition: color 0.2s ease;
+    pointer-events: auto;
+    z-index: 1;
+    position: relative;
 }
 
 .card-title-portal a:hover {
@@ -816,7 +817,8 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     border: 2px solid;
     pointer-events: auto !important;
     position: relative;
-    z-index: 10;
+    z-index: 100;
+    touch-action: manipulation;
 }
 
 .btn-icon {
@@ -824,7 +826,10 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     height: 14px;
     stroke: currentColor;
     stroke-width: 2;
+    pointer-events: none; /* アイコンだけpointer-eventsを無効化 */
 }
+
+/* テキストノードには影響しないため、安全 */
 
 .btn-primary {
     background: var(--portal-primary);
@@ -851,6 +856,14 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     color: var(--portal-bg);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-ai.btn-touching,
+.btn-ai:active {
+    background: var(--portal-accent);
+    color: var(--portal-primary);
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== モバイル最適化 ===== */
@@ -916,6 +929,20 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     .card-tags-portal .tag-item:last-child {
         display: none !important;
     }
+    
+    /* スマホでのタッチ対応を強化 */
+    .btn-portal {
+        min-height: 48px;
+        -webkit-tap-highlight-color: rgba(255, 235, 59, 0.3);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+    }
+    
+    .btn-ai {
+        z-index: 150 !important;
+        isolation: isolate;
+    }
 }
 
 @media (max-width: 480px) {
@@ -957,8 +984,23 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     }
     
     .btn-portal {
-        padding: 9px 14px;
-        font-size: 12px;
+        padding: 12px 16px;
+        font-size: 13px;
+        min-height: 52px;
+        font-weight: 700;
+    }
+    
+    .btn-ai {
+        background: var(--portal-accent) !important;
+        color: var(--portal-primary) !important;
+        border-color: var(--portal-accent) !important;
+        z-index: 200 !important;
+    }
+    
+    .btn-ai:active {
+        transform: scale(0.95);
+        background: var(--portal-primary) !important;
+        color: var(--portal-accent) !important;
     }
 }
 
@@ -1852,7 +1894,6 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
                     data-grant-id="<?php echo esc_attr($post_id); ?>" 
                     data-grant-title="<?php echo esc_attr($title); ?>"
                     data-grant-permalink="<?php echo esc_url($permalink); ?>"
-                    data-nonce="<?php echo esc_attr($ai_nonce); ?>"
                     aria-label="AIアシスタントに質問">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
@@ -1870,28 +1911,38 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
 
 <script>
 // ============================================
-// 🔥 Portal Card AI Chat - Light Mode Only v2.1
-// ダークモード完全無効化版
+// 🔥 Portal Card AI Chat - Light Mode Only v2.2
+// Performance optimized - Single initialization
 // ============================================
 (function() {
     'use strict';
     
-    console.log('🚀 Portal Card AI Chat Script v2.1 - Light Mode Only');
+    // グローバル初期化フラグで重複登録を防止
+    if (window._portalAIChatInitialized) {
+        return;
+    }
+    window._portalAIChatInitialized = true;
+    
+    console.log('🚀 Portal Card AI Chat Script v2.2 - Performance Optimized');
     
     let currentEscHandler = null;
     
-    // DOMContentLoadedを待つ
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPortalAIChat);
-    } else {
-        initPortalAIChat();
-    }
+    // 即座に初期化（DOMContentLoadedを待たない）
+    // これにより、unified-frontend.jsのsetupCardInteractions()より先に登録される
+    initPortalAIChat();
     
     function initPortalAIChat() {
         console.log('✅ Portal AI Chat initialization started');
         
+        // デバッグ: AIボタンの数を確認
+        const aiButtons = document.querySelectorAll('.grant-ai-trigger-portal');
+        console.log('🔍 Found AI buttons:', aiButtons.length);
+        
         // AI Searchセクションのコントローラーを利用
         const searchSection = document.getElementById('ai-search-section');
+        console.log('🔍 AI Search section:', searchSection);
+        console.log('🔍 AI Controller:', searchSection?._aiController);
+        
         if (searchSection && searchSection._aiController) {
             console.log('✅ Using AI Search controller (preferred method)');
             bindPortalCardsToAISearch(searchSection._aiController);
@@ -1899,31 +1950,55 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
             console.log('⚠️ AI Search controller not found, using standalone mode');
             initStandalonePortalAI();
         }
+        
+        // デバッグ用: 最初のボタンにテストハンドラーを追加
+        if (aiButtons.length > 0) {
+            console.log('🔧 Adding test handler to first button');
+            aiButtons[0].addEventListener('click', function(e) {
+                console.log('🧪 TEST: Button clicked directly!', e);
+            }, true);
+        }
     }
     
     // ========================================
     // Method 1: AI Searchコントローラー利用
     // ========================================
     function bindPortalCardsToAISearch(controller) {
+        console.log('🔧 Setting up AI Search controller binding...');
+        
+        // より優先度の高いイベントリスナーを設定（capture phase）
         document.addEventListener('click', function(e) {
+            console.log('🔍 Click detected:', e.target);
+            
             const aiButton = e.target.closest('.grant-ai-trigger-portal');
+            console.log('🔍 AI Button found:', aiButton);
+            
             if (aiButton) {
+                console.log('✅ AI button click confirmed!');
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 
                 const postId = aiButton.dataset.postId || aiButton.dataset.grantId;
                 const grantTitle = aiButton.dataset.grantTitle;
                 const grantPermalink = aiButton.dataset.grantPermalink;
                 
                 console.log('🎯 Portal AI button clicked (AI Search):', { postId, grantTitle, grantPermalink });
+                console.log('🎯 Controller:', controller);
+                console.log('🎯 showGrantAssistant function:', typeof controller.showGrantAssistant);
                 
                 if (postId && grantTitle && grantPermalink) {
-                    controller.showGrantAssistant(postId, grantTitle, grantPermalink);
+                    if (typeof controller.showGrantAssistant === 'function') {
+                        console.log('✅ Calling showGrantAssistant...');
+                        controller.showGrantAssistant(postId, grantTitle, grantPermalink);
+                    } else {
+                        console.error('❌ showGrantAssistant is not a function!');
+                    }
                 } else {
-                    console.error('❌ Missing grant data');
+                    console.error('❌ Missing grant data:', { postId, grantTitle, grantPermalink });
                 }
             }
-        });
+        }, true); // capture phaseで処理
         
         console.log('✅ Portal cards bound to AI Search controller');
     }
@@ -1932,35 +2007,54 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     // Method 2: スタンドアロンモード（独自モーダル）
     // ========================================
     function initStandalonePortalAI() {
-        document.addEventListener('click', function(e) {
+        console.log('🔧 Setting up standalone Portal AI...');
+        
+        // より優先度の高いイベントリスナーを設定（capture phase）
+        // 統合イベントハンドラー - clickとtouchendの両方を処理
+        const handleAIButtonActivation = function(e) {
+            console.log('🔍 Event detected (standalone):', e.type, e.target);
+            
             const aiButton = e.target.closest('.grant-ai-trigger-portal');
+            console.log('🔍 AI Button found (standalone):', aiButton);
+            
             if (aiButton) {
+                console.log('✅ AI button activation confirmed (standalone)!');
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 
                 const postId = aiButton.dataset.postId || aiButton.dataset.grantId;
                 const grantTitle = aiButton.dataset.grantTitle;
                 const grantPermalink = aiButton.dataset.grantPermalink;
-                const nonce = aiButton.dataset.nonce;
                 
-                console.log('🎯 Portal AI button clicked (Standalone):', { postId, grantTitle, grantPermalink, nonce });
+                console.log('🎯 Portal AI button activated:', { postId, grantTitle, grantPermalink });
                 
                 if (postId && grantTitle && grantPermalink) {
-                    showPortalAIModal(postId, grantTitle, grantPermalink, nonce);
+                    console.log('✅ Showing Portal AI Modal...');
+                    showPortalAIModal(postId, grantTitle, grantPermalink);
                 } else {
-                    console.error('❌ Missing grant data');
+                    console.error('❌ Missing grant data:', { postId, grantTitle, grantPermalink });
                     alert('エラー: 助成金データが不足しています');
                 }
+                return false;
             }
-        });
+        };
         
-        console.log('✅ Standalone Portal AI initialized');
+        // クリックイベント
+        console.log('🔧 Adding click listener (capture phase)...');
+        document.addEventListener('click', handleAIButtonActivation, true);
+        
+        // タッチイベント (モバイル用)
+        console.log('🔧 Adding touchend listener (capture phase)...');
+        document.addEventListener('touchend', handleAIButtonActivation, true);
+        
+        console.log('✅ Standalone Portal AI initialized (unified event handler)');
     }
     
     // ========================================
     // Portal AI Modal Creation
     // ========================================
-    function showPortalAIModal(postId, grantTitle, grantPermalink, nonce) {
+    function showPortalAIModal(postId, grantTitle, grantPermalink) {
         console.log('📱 Opening Portal AI Modal:', { postId, grantTitle });
         
         // 既存のモーダルを削除
@@ -2011,7 +2105,6 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
                                     class="portal-ai-chat-send" 
                                     id="portal-ai-chat-send-${postId}"
                                     data-post-id="${postId}"
-                                    data-nonce="${nonce}"
                                     data-permalink="${grantPermalink}"
                                     aria-label="質問を送信">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -2053,7 +2146,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
             }
         }, 10);
         
-        setupPortalModalEvents(postId, grantPermalink, nonce);
+        setupPortalModalEvents(postId, grantPermalink);
         
         // 入力フォーカス
         setTimeout(() => {
@@ -2065,7 +2158,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     // ========================================
     // Modal Event Listeners
     // ========================================
-    function setupPortalModalEvents(postId, grantPermalink, nonce) {
+    function setupPortalModalEvents(postId, grantPermalink) {
         const modal = document.getElementById('portal-ai-modal');
         if (!modal) return;
         
@@ -2078,7 +2171,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
         if (sendBtn) {
             sendBtn.addEventListener('click', () => {
                 const inputId = `portal-ai-chat-input-${postId}`;
-                sendPortalAIQuestion(postId, inputId, sendBtn, grantPermalink, nonce);
+                sendPortalAIQuestion(postId, inputId, sendBtn, grantPermalink);
             });
         }
         
@@ -2089,7 +2182,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     const sendBtn = document.getElementById(`portal-ai-chat-send-${postId}`);
-                    sendPortalAIQuestion(postId, input.id, sendBtn, grantPermalink, nonce);
+                    sendPortalAIQuestion(postId, input.id, sendBtn, grantPermalink);
                 }
             });
             
@@ -2103,7 +2196,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
         // Suggestion buttons
         modal.querySelectorAll('.portal-ai-suggestion').forEach(btn => {
             btn.addEventListener('click', function() {
-                selectPortalSuggestion(postId, this.getAttribute('data-question'), grantPermalink, nonce);
+                selectPortalSuggestion(postId, this.getAttribute('data-question'), grantPermalink);
             });
         });
         
@@ -2129,20 +2222,20 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
         }
     }
     
-    function selectPortalSuggestion(postId, question, grantPermalink, nonce) {
+    function selectPortalSuggestion(postId, question, grantPermalink) {
         const input = document.getElementById(`portal-ai-chat-input-${postId}`);
         if (input) {
             input.value = question;
             input.focus();
             const sendBtn = document.getElementById(`portal-ai-chat-send-${postId}`);
-            setTimeout(() => sendPortalAIQuestion(postId, input.id, sendBtn, grantPermalink, nonce), 300);
+            setTimeout(() => sendPortalAIQuestion(postId, input.id, sendBtn, grantPermalink), 300);
         }
     }
     
     // ========================================
     // AI Question Sending
     // ========================================
-    function sendPortalAIQuestion(postId, inputId, sendBtn, grantPermalink, nonce) {
+    function sendPortalAIQuestion(postId, inputId, sendBtn, grantPermalink) {
         const input = document.getElementById(inputId);
         const messagesContainer = document.getElementById(`portal-ai-chat-messages-${postId}`);
         
@@ -2167,17 +2260,20 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
         input.value = '';
         input.style.height = 'auto';
         
-        // Prepare request
+        // Prepare request - Use PHP-generated nonce directly (same as single-grant.php)
         const formData = new FormData();
         formData.append('action', 'handle_grant_ai_question');
         formData.append('post_id', postId);
         formData.append('question', question);
-        formData.append('nonce', nonce || '<?php echo wp_create_nonce('gi_ajax_nonce'); ?>');
+        formData.append('nonce', '<?php echo wp_create_nonce("gi_ajax_nonce"); ?>');
+        
+        console.log('📤 Sending AI question:', { postId, question });
+        console.log('🔐 Using PHP-generated nonce (same as single-grant.php)');
         
         const ajaxUrl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
         
         console.log('🌐 Sending request to:', ajaxUrl);
-        console.log('📋 Request data:', { action: 'handle_grant_ai_question', post_id: postId, question, nonce });
+        console.log('📋 Request data:', { action: 'handle_grant_ai_question', post_id: postId, question, nonce: finalNonce });
         
         // Show typing indicator
         const typingIndicator = addTypingIndicator(messagesContainer);
@@ -2204,7 +2300,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
                 
                 // Update suggestions if provided
                 if (data.data.suggestions) {
-                    updatePortalSuggestions(postId, data.data.suggestions, grantPermalink, nonce);
+                    updatePortalSuggestions(postId, data.data.suggestions, grantPermalink);
                 }
             } else {
                 const errorMsg = data.data?.message || '申し訳ございません。エラーが発生しました。';
@@ -2313,7 +2409,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
         return indicator;
     }
     
-    function updatePortalSuggestions(postId, suggestions, grantPermalink, nonce) {
+    function updatePortalSuggestions(postId, suggestions, grantPermalink) {
         const suggestionsContainer = document.querySelector(`#portal-ai-modal .portal-ai-chat-suggestions`);
         if (!suggestionsContainer) return;
         
@@ -2326,7 +2422,7 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
         // Re-bind events
         suggestionsContainer.querySelectorAll('.portal-ai-suggestion').forEach(btn => {
             btn.addEventListener('click', function() {
-                selectPortalSuggestion(postId, this.getAttribute('data-question'), grantPermalink, nonce);
+                selectPortalSuggestion(postId, this.getAttribute('data-question'), grantPermalink);
             });
         });
     }
@@ -2338,6 +2434,71 @@ $ai_nonce = wp_create_nonce('gi_ajax_nonce');
     }
     
     console.log('✅ Portal Card AI Chat Script v2.1 fully loaded');
+    
+    // スマホ用追加処理：カード内のリンククリックを防ぐ
+    function preventCardLinkOnButtonClick() {
+        document.querySelectorAll('.grant-ai-trigger-portal').forEach(button => {
+            // クリックイベント
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                console.log('🎯 Direct button click detected');
+            }, true);
+            
+            // タッチイベント
+            button.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                this.classList.add('btn-touching');
+            }, { passive: true });
+            
+            button.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                this.classList.remove('btn-touching');
+                console.log('📱 Direct button touch detected');
+                
+                // 強制的にクリックイベントをトリガー
+                this.click();
+            }, false);
+            
+            button.addEventListener('touchcancel', function() {
+                this.classList.remove('btn-touching');
+            }, { passive: true });
+        });
+    }
+    
+    // ページロード時とDOM変更時に実行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', preventCardLinkOnButtonClick);
+    } else {
+        preventCardLinkOnButtonClick();
+    }
+    
+    // MutationObserverで動的に追加されるカードにも対応
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                preventCardLinkOnButtonClick();
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // ========================================
+    // グローバルスコープに関数を公開
+    // ========================================
+    // これにより、スタンドアロンモードでも関数が使えるようになる
+    window.showPortalAIModal = showPortalAIModal;
+    window.closePortalAIModal = closePortalAIModal;
+    window.sendPortalAIQuestion = sendPortalAIQuestion;
+    
+    console.log('✅ Portal AI functions exposed to global scope');
     
 })();
 </script>

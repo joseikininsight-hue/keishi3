@@ -160,32 +160,23 @@ if ($is_prefecture_archive) {
     $keywords[] = $current_category->name;
 }
 $keywords_string = implode(',', $keywords);
+
+/**
+ * SEO メタタグ出力
+ * 
+ * NOTE: 以下のメタタグはwp_head()経由でSEOプラグインまたはテーマのSEO機能から
+ * 一元的に出力されるため、ここでは重複を避けるためコメントアウトしています。
+ * 
+ * - meta description
+ * - meta keywords
+ * - meta robots
+ * - canonical link
+ * - Open Graph tags (og:*)
+ * - Twitter Card tags (twitter:*)
+ * 
+ * これらのタグはheader.phpのwp_head()によって適切に出力されます。
+ */
 ?>
-
-<!-- SEO メタタグ -->
-<meta name="description" content="<?php echo esc_attr($archive_description); ?>">
-<meta name="keywords" content="<?php echo esc_attr($keywords_string); ?>">
-<meta name="author" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-<link rel="canonical" href="<?php echo esc_url($canonical_url); ?>">
-
-<!-- Open Graph -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="<?php echo esc_attr($archive_title . ' | ' . get_bloginfo('name')); ?>">
-<meta property="og:description" content="<?php echo esc_attr($archive_description); ?>">
-<meta property="og:url" content="<?php echo esc_url($canonical_url); ?>">
-<meta property="og:image" content="<?php echo esc_url($og_image); ?>">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="<?php echo esc_attr(get_bloginfo('name')); ?>">
-<meta property="og:locale" content="ja_JP">
-<meta property="og:updated_time" content="<?php echo current_time('c'); ?>">
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?php echo esc_attr($archive_title); ?>">
-<meta name="twitter:description" content="<?php echo esc_attr($archive_description); ?>">
-<meta name="twitter:image" content="<?php echo esc_url($og_image); ?>">
 
 <!-- 構造化データ: CollectionPage -->
 <script type="application/ld+json">
@@ -1257,13 +1248,27 @@ $keywords_string = implode(',', $keywords);
                 </p>
             </div>
 
-            <!-- ページネーション -->
+            <!-- ページネーション（SEO対応：クロール可能なリンク形式） -->
             <div class="pagination-wrapper" 
-                 id="pagination-wrapper" 
-                 style="display: none;">
-                <nav class="pagination" 
-                     id="pagination" 
-                     aria-label="検索結果のページネーション"></nav>
+                 id="pagination-wrapper">
+                <?php
+                // WordPress標準のページネーション（クロール可能な<a>タグを生成）
+                $big = 999999999; // 大きな数値が必要
+                
+                echo paginate_links( array(
+                    'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+                    'format' => '?paged=%#%',
+                    'current' => max( 1, get_query_var('paged') ),
+                    'total' => $initial_grants_query->max_num_pages,
+                    'type' => 'plain',
+                    'prev_text' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 前へ',
+                    'next_text' => '次へ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+                    'mid_size' => 2,
+                    'end_size' => 1,
+                    'aria_current' => 'page',
+                    'before_page_number' => '<span class="screen-reader-text">ページ </span>',
+                ) );
+                ?>
             </div>
         </div>
     </section>
@@ -2117,55 +2122,71 @@ $keywords_string = implode(',', $keywords);
     margin: 0;
 }
 
-/* ===== Pagination ===== */
+/* ===== Pagination（SEO対応：クロール可能なリンク形式） ===== */
 .pagination-wrapper {
     margin-top: 60px;
     display: flex;
     justify-content: center;
+    padding: 20px 0;
 }
 
-.pagination {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pagination-btn {
-    display: flex;
+.pagination-wrapper .page-numbers {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 44px;
     height: 44px;
     padding: 0 12px;
+    margin: 0 4px;
     border: 2px solid var(--color-gray-300);
     border-radius: var(--border-radius);
     background: var(--color-secondary);
     color: var(--color-gray-700);
     font-size: 14px;
     font-weight: 600;
-    cursor: pointer;
+    text-decoration: none;
     transition: all var(--transition-fast);
 }
 
-.pagination-btn:hover:not(:disabled) {
+.pagination-wrapper .page-numbers:hover {
     border-color: var(--color-primary);
     color: var(--color-primary);
+    background: var(--color-gray-50);
 }
 
-.pagination-btn.active {
+.pagination-wrapper .page-numbers.current {
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: var(--color-secondary);
+    cursor: default;
 }
 
-.pagination-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+.pagination-wrapper .page-numbers.dots {
+    border: none;
+    background: transparent;
+    cursor: default;
 }
 
-.pagination-ellipsis {
-    padding: 0 8px;
-    color: var(--color-gray-400);
+.pagination-wrapper .prev,
+.pagination-wrapper .next {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-wrapper .prev svg,
+.pagination-wrapper .next svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+    .pagination-wrapper .page-numbers {
+        min-width: 40px;
+        height: 40px;
+        font-size: 13px;
+    }
 }
 
 /* ===== Responsive Design ===== */

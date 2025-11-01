@@ -894,18 +894,41 @@ cacheElements() {
      * カードインタラクション
      */
     setupCardInteractions() {
-        document.addEventListener('click', (e) => {
-            const card = e.target.closest('.gi-grant-card-enhanced, .grant-card, .category-card');
-            if (!card) return;
-
-            // ボタンやリンク以外をクリックした場合、詳細ページに移動
-            if (!e.target.matches('button, .btn, a, input, .gi-bookmark-btn')) {
-                const link = card.querySelector('a[href]');
-                if (link) {
-                    window.location.href = link.href;
+        // 少し遅延させて、AIボタンのcapture phaseハンドラーが確実に先に登録されるようにする
+        setTimeout(() => {
+            console.log('🔧 Setting up card interactions (delayed)...');
+            
+            // Bubble phaseで登録（capture phaseのAIハンドラーより後に実行される）
+            document.addEventListener('click', (e) => {
+                console.log('🔍 Card interaction handler triggered');
+                
+                // AIボタンを最優先で除外
+                const aiButton = e.target.closest('.grant-ai-trigger-portal');
+                if (aiButton) {
+                    console.log('✅ AI button detected - skipping card handler');
+                    return; // AIボタンは他のハンドラーに任せる
                 }
-            }
-        });
+
+                const card = e.target.closest('.gi-grant-card-enhanced, .grant-card, .category-card, .grant-card-list-portal');
+                if (!card) return;
+
+                console.log('🔍 Card found:', card);
+
+                // ボタンやリンク以外をクリックした場合、詳細ページに移動
+                // closest()を使用してボタン内の子要素クリックもキャッチ
+                const clickedInteractive = e.target.closest('button, a, input, .gi-bookmark-btn');
+                if (!clickedInteractive) {
+                    // インタラクティブ要素以外をクリック → 詳細ページへ
+                    console.log('🔍 Non-interactive area clicked - navigating to detail page');
+                    const detailLink = card.querySelector('a.btn-primary[href]');
+                    if (detailLink && detailLink.href) {
+                        window.location.href = detailLink.href;
+                    }
+                } else {
+                    console.log('🔍 Interactive element clicked:', clickedInteractive);
+                }
+            }, false); // Bubble phaseで実行（デフォルト）
+        }, 100); // 100ms遅延
     },
 
     /**
@@ -917,12 +940,22 @@ cacheElements() {
         let isRefreshing = false;
 
         document.addEventListener('touchstart', (e) => {
+            // モーダルが開いている時は無効化
+            if (document.querySelector('.portal-ai-modal.active, .gi-modal-active')) {
+                return;
+            }
+            
             if (window.scrollY === 0 && !isRefreshing) {
                 startY = e.touches[0].clientY;
             }
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
+            // モーダルが開いている時は無効化
+            if (document.querySelector('.portal-ai-modal.active, .gi-modal-active')) {
+                return;
+            }
+            
             if (window.scrollY === 0 && startY > 0) {
                 currentY = e.touches[0].clientY;
                 const pullDistance = currentY - startY;
@@ -934,6 +967,13 @@ cacheElements() {
         }, { passive: true });
 
         document.addEventListener('touchend', () => {
+            // モーダルが開いている時は無効化
+            if (document.querySelector('.portal-ai-modal.active, .gi-modal-active')) {
+                startY = 0;
+                currentY = 0;
+                return;
+            }
+            
             if (currentY - startY > 100 && !isRefreshing) {
                 this.triggerRefresh();
             }

@@ -70,5 +70,5 @@ Disallow: /
 
 # サイトマップの場所（重要）
 # WordPress標準のサイトマップ
-Sitemap: https://joserkoin.com/wp-sitemap.xml
-Sitemap: https://joserkoin.com/sitemap.xml
+Sitemap: https://joseikin.com/wp-sitemap.xml
+Sitemap: https://joseikin.com/sitemap.xml
