@@ -1,0 +1,242 @@
+<?php
+/**
+ * Grant Insight Perfect - Front Page Template
+ * テンプレートパーツを活用したシンプル構成
+ *
+ * @package Grant_Insight_Perfect
+ * @version 7.1-optimized
+ */
+
+get_header(); ?>
+
+<style>
+/* フロントページ専用スタイル */
+.site-main {
+    padding: 0;
+    background: #ffffff;
+}
+
+/* セクション間のスペーシング調整 */
+.front-page-section {
+    position: relative;
+}
+
+.front-page-section + .front-page-section {
+    margin-top: -1px; /* セクション間の隙間を削除 */
+}
+
+/* スムーススクロール */
+html {
+    scroll-behavior: smooth;
+}
+
+/* セクションアニメーション - モバイル対応改善 */
+.section-animate {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* デスクトップのみアニメーション適用 */
+@media (min-width: 1024px) {
+    .section-animate {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    
+    .section-animate.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* モバイル最適化 - スクロール問題完全解決 */
+@media (max-width: 1023px) {
+    html {
+        height: 100%;
+        overflow-y: auto !important;
+        -webkit-text-size-adjust: 100%;
+    }
+    
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+    }
+    
+    .site-main {
+        display: block !important;
+        width: 100% !important;
+        overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
+    }
+    
+    /* フロントページ専用のスクロール修正 */
+    .front-page-section {
+        display: block !important;
+        width: 100% !important;
+        min-height: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        position: relative !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    
+    /* すべてのセクション要素を強制表示 */
+    section {
+        display: block !important;
+        width: 100% !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+    }
+}
+
+/* スクロールプログレスバー */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    /* ===== 変更点1: プログレスバーの色を白黒（グレー）に変更 ===== */
+    background: #333333;
+    z-index: 9999;
+    transition: width 0.1s ease;
+    width: 0%;
+}
+</style>
+
+<main id="main" class="site-main" role="main">
+
+    <?php
+    /**
+     * 1. Hero Section
+     * メインビジュアルとキャッチコピー
+     */
+    ?>
+    <section class="front-page-section section-animate" id="hero-section">
+        <?php get_template_part('template-parts/front-page/section', 'hero'); ?>
+    </section>
+
+    <?php
+    /**
+     * 2. Search + Browse Section (統合版)
+     * AI検索セクション + 用途から探す
+     */
+    ?>
+    <section class="front-page-section section-animate" id="search-section">
+        <?php 
+        error_log('[Front Page] Loading section-search.php');
+        get_template_part('template-parts/front-page/section', 'search'); 
+        error_log('[Front Page] section-search.php loaded');
+        ?>
+    </section>
+
+
+</main>
+
+<div class="scroll-progress" id="scroll-progress"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    'use strict';
+    
+    // セクションアニメーション（デスクトップのみ）
+    if (window.innerWidth >= 1024) {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    sectionObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.section-animate').forEach(section => {
+            sectionObserver.observe(section);
+        });
+    } else {
+        // モバイルではすべてのセクションを即座に表示
+        document.querySelectorAll('.section-animate').forEach(section => {
+            section.classList.add('visible');
+            section.style.opacity = '1';
+            section.style.transform = 'none';
+        });
+    }
+
+    /* ===== 変更点2: スクロール処理をrequestAnimationFrameで最適化 ===== */
+    const progressBar = document.getElementById('scroll-progress');
+    let ticking = false;
+
+    function updateProgressBar() {
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = window.scrollY;
+        // スクロール量が0未満またはscrollHeightが0の場合の計算エラーを防ぐ
+        const progress = scrollHeight > 0 ? (scrolled / scrollHeight) * 100 : 0;
+        
+        if (progressBar) {
+            progressBar.style.width = Math.min(progress, 100) + '%';
+        }
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            window.requestAnimationFrame(function() {
+                updateProgressBar();
+            });
+            ticking = true;
+        }
+    });
+    
+    // 初期表示時にもプログレスバーを更新
+    window.requestAnimationFrame(updateProgressBar);
+    
+    // パフォーマンス監視
+    if ('performance' in window) {
+        window.addEventListener('load', function() {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            if (perfData) {
+                console.log('[パフォーマンス] ページ読み込み時間:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+            }
+        });
+    }
+    
+    // ページ内リンクのスムーススクロール
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href && href !== '#' && href !== '#0') {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    const offset = 80; // ヘッダーの高さ分調整
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    });
+    
+    console.log('[OK] Grant Insight Perfect - フロントページ初期化完了 (v7.1-optimized)');
+    
+    // セクションの読み込み確認
+    console.log('[Debug] Hero section exists:', !!document.getElementById('hero-section'));
+    console.log('[Debug] Search section exists:', !!document.getElementById('search-section'));
+    console.log('[Debug] Categories section exists:', !!document.getElementById('categories-section'));
+    console.log('[Debug] Browse section integrated exists:', !!document.querySelector('.browse-section-integrated'));
+});
+</script>
+
+<?php get_footer(); ?>
