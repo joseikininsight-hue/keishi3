@@ -276,8 +276,9 @@ $required_files = array(
     // 'grant-advanced-seo-enhancer.php'   // SEO大幅強化（OGP、Schema.org拡張、内部リンク）
     
     // Column System (v1.0.0+) - NEW: コラム機能統合システム
-    'column-system.php',  // コラム機能（カスタム投稿タイプ、ACF、補助金連携、Analytics）
-    'column-admin-ui.php',  // コラム管理UI（Phase 3: 承認ワークフロー、分析ダッシュボード、設定）
+    // TEMPORARILY DISABLED for debugging
+    // 'column-system.php',  // コラム機能（カスタム投稿タイプ、ACF、補助金連携、Analytics）
+    // 'column-admin-ui.php',  // コラム管理UI（Phase 3: 承認ワークフロー、分析ダッシュボード、設定）
 );
 
 // ファイルを安全に読み込み
