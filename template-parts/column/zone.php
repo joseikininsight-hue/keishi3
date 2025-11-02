@@ -1,0 +1,258 @@
+<?php
+/**
+ * Template Part: Column Zone
+ * トップページ用のコラムゾーン（Yahoo!風2カラムレイアウト）
+ * 
+ * @package Grant_Insight_Perfect
+ * @subpackage Column_System
+ * @version 1.0.0
+ */
+
+// セキュリティチェック
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// カテゴリ一覧を取得
+$categories = gi_get_column_categories(true);
+
+// 特集記事を取得（1件）
+$featured_query = gi_get_featured_columns(1);
+
+// 通常記事を取得（6件）
+$recent_query = gi_get_columns(array(
+    'posts_per_page' => 6,
+    'meta_query' => array(
+        array(
+            'key' => 'column_status',
+            'value' => 'approved',
+            'compare' => '=',
+        ),
+    ),
+));
+?>
+
+<!-- コラムゾーン -->
+<div class="column-zone bg-white py-12 lg:py-16" id="column-zone">
+    <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- セクションヘッダー -->
+        <div class="section-header mb-8 text-center lg:text-left">
+            <div class="flex items-center justify-center lg:justify-start mb-3">
+                <span class="text-3xl mr-3">📝</span>
+                <h2 class="text-h2 font-bold text-gray-900">補助金コラム</h2>
+            </div>
+            <p class="text-gray-600 text-base">
+                補助金活用のヒントやノウハウ、最新情報をお届けします
+            </p>
+        </div>
+
+        <!-- タブナビゲーション -->
+        <div class="tab-navigation mb-6 overflow-x-auto">
+            <ul class="flex space-x-2 md:space-x-4 border-b border-gray-200 min-w-max">
+                <li>
+                    <button 
+                        class="column-tab-link active px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
+                        data-category="all"
+                        data-tab="all">
+                        すべて
+                    </button>
+                </li>
+                <?php if (!empty($categories)): ?>
+                    <?php foreach ($categories as $category): ?>
+                        <li>
+                            <button 
+                                class="column-tab-link px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap"
+                                data-category="<?php echo esc_attr($category->slug); ?>"
+                                data-tab="<?php echo esc_attr($category->slug); ?>">
+                                <?php echo gi_get_category_icon($category->slug); ?>
+                                <?php echo esc_html($category->name); ?>
+                            </button>
+                        </li>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </ul>
+        </div>
+
+        <!-- 2カラムレイアウト -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            
+            <!-- メインコンテンツ（PC: 70%） -->
+            <div class="lg:col-span-8">
+                
+                <!-- 特集記事エリア -->
+                <?php if ($featured_query->have_posts()): ?>
+                    <div class="featured-articles mb-8">
+                        <?php while ($featured_query->have_posts()): $featured_query->the_post(); ?>
+                            <article class="featured-column-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+                                    
+                                    <!-- 画像部分 -->
+                                    <div class="relative h-64 md:h-auto">
+                                        <a href="<?php the_permalink(); ?>" class="block h-full">
+                                            <?php if (has_post_thumbnail()): ?>
+                                                <img 
+                                                    src="<?php echo get_the_post_thumbnail_url(get_the_ID(), 'large'); ?>" 
+                                                    alt="<?php the_title_attribute(); ?>"
+                                                    class="w-full h-full object-cover">
+                                            <?php else: ?>
+                                                <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                    <span class="text-6xl text-gray-400">📝</span>
+                                                </div>
+                                            <?php endif; ?>
+                                        </a>
+                                        
+                                        <!-- 特集バッジ -->
+                                        <div class="absolute top-4 left-4">
+                                            <span class="bg-error text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center">
+                                                ⭐ 特集記事
+                                            </span>
+                                        </div>
+
+                                        <!-- カテゴリバッジ -->
+                                        <?php
+                                        $cats = get_the_terms(get_the_ID(), 'column_category');
+                                        if ($cats && !is_wp_error($cats)):
+                                            $cat = $cats[0];
+                                        ?>
+                                            <div class="absolute bottom-4 left-4">
+                                                <a href="<?php echo get_term_link($cat); ?>" 
+                                                   class="bg-primary text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-primary-dark transition-colors">
+                                                    <?php echo esc_html($cat->name); ?>
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- テキスト部分 -->
+                                    <div class="p-6 flex flex-col justify-between">
+                                        <div>
+                                            <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-3 leading-tight">
+                                                <a href="<?php the_permalink(); ?>" class="hover:text-primary transition-colors">
+                                                    <?php the_title(); ?>
+                                                </a>
+                                            </h3>
+
+                                            <p class="text-gray-600 mb-4 line-clamp-3">
+                                                <?php echo wp_trim_words(get_the_excerpt(), 80, '...'); ?>
+                                            </p>
+                                        </div>
+
+                                        <!-- メタ情報 -->
+                                        <div class="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
+                                            <div class="flex items-center space-x-3">
+                                                <span class="flex items-center">
+                                                    📅 <?php echo get_the_date('Y.m.d'); ?>
+                                                </span>
+                                                <?php $read_time = get_field('estimated_read_time'); ?>
+                                                <?php if ($read_time): ?>
+                                                    <span class="flex items-center">
+                                                        ⏱️ <?php echo esc_html($read_time); ?>分
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php $view_count = get_field('view_count'); ?>
+                                            <span class="flex items-center font-medium">
+                                                👁️ <?php echo number_format($view_count); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endwhile; ?>
+                        <?php wp_reset_postdata(); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- 記事一覧グリッド -->
+                <div id="column-grid-container">
+                    <div class="article-grid grid grid-cols-1 md:grid-cols-2 gap-6" id="column-article-grid">
+                        <?php if ($recent_query->have_posts()): ?>
+                            <?php while ($recent_query->have_posts()): $recent_query->the_post(); ?>
+                                <?php get_template_part('template-parts/column/card'); ?>
+                            <?php endwhile; ?>
+                            <?php wp_reset_postdata(); ?>
+                        <?php else: ?>
+                            <div class="col-span-2 text-center py-12">
+                                <p class="text-gray-500 text-lg">まだコラム記事がありません。</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- ローディングインジケーター -->
+                    <div id="column-loading" class="hidden text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        <p class="text-gray-600 mt-3">読み込み中...</p>
+                    </div>
+                </div>
+
+                <!-- もっと見るボタン -->
+                <div class="text-center mt-8">
+                    <a 
+                        href="<?php echo get_post_type_archive_link('column'); ?>" 
+                        class="inline-flex items-center justify-center px-8 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors shadow hover:shadow-md">
+                        もっと見る
+                        <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- サイドバー（PC: 30%） -->
+            <aside class="lg:col-span-4">
+                <?php get_template_part('template-parts/column/sidebar'); ?>
+            </aside>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Ajax用のnonceを出力 -->
+<script>
+var gi_column_ajax = {
+    ajax_url: '<?php echo admin_url('admin-ajax.php'); ?>',
+    nonce: '<?php echo wp_create_nonce('gi_column_ajax'); ?>',
+    current_category: 'all',
+    current_page: 1,
+    loading: false
+};
+</script>
+
+<style>
+/* タブナビゲーションスタイル */
+.column-tab-link {
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+
+.column-tab-link:hover {
+    color: #374151;
+    border-bottom-color: #d1d5db;
+}
+
+.column-tab-link.active {
+    color: #059669;
+    border-bottom-color: #059669;
+}
+
+/* 特集記事カードのホバーエフェクト */
+.featured-column-card {
+    transform: translateY(0);
+}
+
+.featured-column-card:hover {
+    transform: translateY(-4px);
+}
+
+/* テキスト切り詰め */
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

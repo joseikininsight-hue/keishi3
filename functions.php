@@ -274,6 +274,10 @@ $required_files = array(
     
     // Advanced SEO Enhancer (v9.3.2+) - DISABLED: Duplicate SEO with single-grant.php
     // 'grant-advanced-seo-enhancer.php'   // SEO大幅強化（OGP、Schema.org拡張、内部リンク）
+    
+    // Column System (v1.0.0+) - NEW: コラム機能統合システム
+    'column-system.php',  // コラム機能（カスタム投稿タイプ、ACF、補助金連携、Analytics）
+    'column-admin-ui.php',  // コラム管理UI（Phase 3: 承認ワークフロー、分析ダッシュボード、設定）
 );
 
 // ファイルを安全に読み込み
@@ -341,4 +345,35 @@ function gi_remove_duplicate_acf_content($content) {
 
 // Add filter with high priority to run early
 add_filter('the_content', 'gi_remove_duplicate_acf_content', 5);
+
+/**
+ * Enqueue Column System CSS and JavaScript
+ * コラムシステムのCSS・JavaScriptを読み込み
+ * 
+ * @return void
+ */
+function gi_enqueue_column_assets() {
+    // コラム関連ページのみ読み込み
+    if (is_singular('column') || is_post_type_archive('column') || 
+        is_tax('column_category') || is_tax('column_tag') || is_front_page()) {
+        
+        // CSS
+        wp_enqueue_style(
+            'gi-column-styles',
+            get_template_directory_uri() . '/assets/css/column.css',
+            array(),
+            GI_THEME_VERSION
+        );
+        
+        // JavaScript
+        wp_enqueue_script(
+            'gi-column-scripts',
+            get_template_directory_uri() . '/assets/js/column.js',
+            array(),
+            GI_THEME_VERSION,
+            true
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'gi_enqueue_column_assets');
 
