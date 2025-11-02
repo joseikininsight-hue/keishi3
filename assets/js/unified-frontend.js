@@ -74,6 +74,7 @@ const GrantInsight = {
             this.setupPerformance();
             this.setupAnimations();
             this.setupForms();
+            this.setupAIButtonListeners(); // AI button event delegation
             
             this.initialized = true;
             this.debug('Grant Insight initialized successfully');
@@ -1156,6 +1157,69 @@ cacheElements() {
         
         // ファイル選択の改善
         this.setupFileInputs();
+    },
+
+    /**
+     * ==========================================================================
+     * AI Button Event Delegation (AJAX re-render safe)
+     * ==========================================================================
+     * 
+     * This handles AI button clicks using event delegation, so it works even
+     * after AJAX content updates (filters, pagination, etc.)
+     */
+    setupAIButtonListeners() {
+        // Only set up once
+        if (window._aiButtonListenersSetup) {
+            this.debug('AI button listeners already setup, skipping');
+            return;
+        }
+        window._aiButtonListenersSetup = true;
+        
+        this.debug('🚀 Setting up AI button listeners with event delegation');
+        
+        // Event delegation on document level
+        document.addEventListener('click', (e) => {
+            // Check if click is on AI button (portal design)
+            const portalAIButton = e.target.closest('.grant-ai-trigger-portal');
+            if (portalAIButton) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const postId = portalAIButton.dataset.postId || portalAIButton.dataset.grantId;
+                const grantTitle = portalAIButton.dataset.grantTitle;
+                const grantPermalink = portalAIButton.dataset.grantPermalink;
+                
+                this.debug('🎯 Portal AI button clicked:', { postId, grantTitle, grantPermalink });
+                
+                if (postId && grantTitle && grantPermalink && typeof window.showPortalAIModal === 'function') {
+                    window.showPortalAIModal(postId, grantTitle, grantPermalink);
+                } else {
+                    console.error('❌ Portal AI modal function not found or missing data');
+                }
+                return;
+            }
+            
+            // Check if click is on AI button (compact design - fallback)
+            const compactAIButton = e.target.closest('.grant-btn-compact--ai');
+            if (compactAIButton) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const postId = compactAIButton.dataset.postId;
+                const grantTitle = compactAIButton.dataset.grantTitle;
+                
+                this.debug('🎯 Compact AI button clicked:', { postId, grantTitle });
+                
+                if (postId && grantTitle && typeof window.showAIChatModal === 'function') {
+                    window.showAIChatModal(postId, grantTitle);
+                } else {
+                    console.error('❌ AI modal function not found or missing data');
+                }
+                return;
+            }
+        }, true); // Use capture phase to ensure it runs before other handlers
+        
+        this.debug('✅ AI button listeners setup complete');
     },
 
     /**

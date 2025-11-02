@@ -3145,9 +3145,8 @@ $keywords_string = implode(',', $keywords);
         
         elements.grantsContainer.innerHTML = grants.map(grant => grant.html).join('');
         
-        if (typeof setupAIButtonListeners === 'function') {
-            setupAIButtonListeners();
-        }
+        // AI button listeners use event delegation (set up once in unified-frontend.js)
+        // No need to re-initialize after AJAX updates
     }
     
     function updateStats(stats) {
