@@ -134,6 +134,19 @@ html {
         ?>
     </section>
 
+    <?php
+    /**
+     * 3. Column Zone Section (NEW)
+     * コラムゾーン（補助金活用のヒントやノウハウ）
+     */
+    ?>
+    <section class="front-page-section section-animate" id="column-section">
+        <?php 
+        error_log('[Front Page] Loading column zone');
+        get_template_part('template-parts/column/zone'); 
+        error_log('[Front Page] Column zone loaded');
+        ?>
+    </section>
 
 </main>
 
