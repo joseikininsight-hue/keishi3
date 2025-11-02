@@ -838,6 +838,20 @@ function gi_register_column_acf_fields() {
                 'media_upload' => 0,
                 'delay' => 0,
             ),
+
+            // =============================
+            // アイキャッチ画像キャプション
+            // =============================
+            array(
+                'key' => 'field_featured_image_caption',
+                'label' => 'アイキャッチ画像キャプション',
+                'name' => 'featured_image_caption',
+                'type' => 'text',
+                'instructions' => 'アイキャッチ画像の説明文やクレジット表記を入力してください。',
+                'required' => 0,
+                'maxlength' => 200,
+                'placeholder' => '例: Photo by John Doe',
+            ),
         ),
         'location' => array(
             array(
