@@ -1337,21 +1337,9 @@ function gi_get_column_category_counts() {
     return $counts;
 }
 
-/**
- * 難易度ラベルを取得
- * 
- * @param string $level 難易度（beginner/intermediate/advanced）
- * @return string ラベル
- */
-function gi_get_difficulty_label($level) {
-    $labels = array(
-        'beginner'     => '初心者向け',
-        'intermediate' => '中級者向け',
-        'advanced'     => '上級者向け',
-    );
-
-    return isset($labels[$level]) ? $labels[$level] : '';
-}
+// =============================================================================
+// Note: gi_get_difficulty_label() is defined in ajax-functions.php
+// =============================================================================
 
 /**
  * カテゴリ別アイコンを取得
