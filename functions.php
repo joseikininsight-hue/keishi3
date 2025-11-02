@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 
 // テーマバージョン定数
 if (!defined('GI_THEME_VERSION')) {
-    define('GI_THEME_VERSION', '9.1.0'); // Municipality slug standardization update
+    define('GI_THEME_VERSION', '9.2.0'); // AI button event delegation + nonce fix
 }
 if (!defined('GI_THEME_PREFIX')) {
     define('GI_THEME_PREFIX', 'gi_');
