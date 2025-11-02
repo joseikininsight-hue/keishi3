@@ -2273,7 +2273,7 @@ if (empty($recommend_reasons)) {
         const ajaxUrl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
         
         console.log('🌐 Sending request to:', ajaxUrl);
-        console.log('📋 Request data:', { action: 'handle_grant_ai_question', post_id: postId, question, nonce: finalNonce });
+        console.log('📋 Request data:', { action: 'handle_grant_ai_question', post_id: postId, question });
         
         // Show typing indicator
         const typingIndicator = addTypingIndicator(messagesContainer);
