@@ -1088,49 +1088,8 @@ add_action('delete_post', 'gi_clear_column_ranking_cache');
 // =============================================================================
 // 8. 補助金自動連携機能
 // =============================================================================
-
-/**
- * テキストからキーワードを抽出
- * 
- * @param string $text テキスト
- * @return array キーワード配列
- */
-function gi_extract_keywords($text) {
-    // HTMLタグを除去
-    $text = wp_strip_all_tags($text);
-
-    // 一般的なストップワードを定義
-    $stopwords = array(
-        'の', 'に', 'は', 'を', 'た', 'が', 'で', 'て', 'と', 'し', 'れ', 'さ',
-        'ある', 'いる', 'も', 'する', 'から', 'な', 'こと', 'として', 'い',
-        'や', 'れる', 'など', 'なっ', 'ない', 'この', 'ため', 'その', 'あっ',
-        'よう', 'また', 'もの', 'という', 'あり', 'まで', 'られ', 'なる',
-    );
-
-    // 形態素解析の代わりに単純な単語分割（実際にはMeCabなどを使用推奨）
-    // ここでは補助金名や重要キーワードを正規表現で抽出
-    $keywords = array();
-
-    // 補助金名パターン
-    preg_match_all('/[ぁ-んァ-ヶー一-龠々]+補助金/', $text, $matches);
-    $keywords = array_merge($keywords, $matches[0]);
-
-    // カタカナ用語（DX、ITなど）
-    preg_match_all('/[A-Z]{2,}/', $text, $matches);
-    $keywords = array_merge($keywords, $matches[0]);
-
-    // 重要そうな名詞句（2文字以上の漢字・カタカナ）
-    preg_match_all('/[ァ-ヶー一-龠々]{2,}/', $text, $matches);
-    $keywords = array_merge($keywords, $matches[0]);
-
-    // 重複除去とストップワード除外
-    $keywords = array_unique($keywords);
-    $keywords = array_filter($keywords, function($word) use ($stopwords) {
-        return !in_array($word, $stopwords) && mb_strlen($word, 'UTF-8') >= 2;
-    });
-
-    return array_values($keywords);
-}
+// Note: gi_extract_keywords() is defined in ajax-functions.php
+// =============================================================================
 
 /**
  * 2つのテキスト間の類似度を計算
