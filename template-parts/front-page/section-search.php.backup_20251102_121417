@@ -56,6 +56,24 @@ $all_tags = get_terms(array(
     'number' => 100
 ));
 
+// レコメンド補助金を取得（注目度の高い6件）
+$recommended_grants = get_posts(array(
+    'post_type' => 'grant',
+    'posts_per_page' => 6,
+    'meta_key' => 'is_featured',
+    'meta_value' => '1',
+    'orderby' => 'rand',
+    'order' => 'DESC'
+));
+
+// 新着補助金を取得（最新9件）
+$new_grants = get_posts(array(
+    'post_type' => 'grant',
+    'posts_per_page' => 9,
+    'orderby' => 'date',
+    'order' => 'DESC'
+));
+
 // カテゴリーをグループ化（用途から探す用）
 $category_groups = array(
     array(
@@ -800,6 +818,336 @@ foreach ($popular_tags as $index => $tag) {
     </div>
 </section>
 
+<!-- あなたへのおすすめ -->
+<section class="recommend-section" 
+         aria-labelledby="recommend-title"
+         itemscope 
+         itemtype="https://schema.org/ItemList">
+    <div class="recommend-wrapper">
+        <header class="section-header">
+            <div class="header-left">
+                <h2 id="recommend-title" class="section-title" itemprop="name">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    あなたの閲覧履歴からおすすめ
+                </h2>
+                <p class="section-desc" itemprop="description">
+                    希望条件を設定しておくと、あなたに合った補助金が見つかります
+                </p>
+            </div>
+            <a href="<?php echo esc_url(home_url('/grants/')); ?>" 
+               class="view-all"
+               aria-label="おすすめ補助金の一覧を見る"
+               title="おすすめ補助金の一覧ページへ">
+                一覧へ <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </a>
+        </header>
+
+        <div class="grants-grid" role="list">
+            <?php 
+            if (!empty($recommended_grants)) :
+                $position = 1;
+                foreach ($recommended_grants as $grant) : 
+                    // メタデータ取得
+                    $deadline = get_post_meta($grant->ID, 'deadline', true);
+                    $max_amount = get_post_meta($grant->ID, 'max_amount', true);
+                    $organization = get_post_meta($grant->ID, 'organization', true);
+                    $is_featured = get_post_meta($grant->ID, 'is_featured', true);
+                    
+                    // 締切日のフォーマット処理
+                    $deadline_display = '';
+                    $deadline_iso = '';
+                    if ($deadline) {
+                        $timestamp = false;
+                        if (is_numeric($deadline)) {
+                            $timestamp = intval($deadline);
+                        } else {
+                            $timestamp = strtotime($deadline);
+                        }
+                        
+                        if ($timestamp && $timestamp > 0) {
+                            $deadline_display = date('Y/m/d', $timestamp);
+                            $deadline_iso = date('Y-m-d', $timestamp);
+                        } else {
+                            $deadline_display = $deadline;
+                        }
+                    }
+                    
+                    $permalink = get_permalink($grant->ID);
+                    
+                    // カテゴリー
+                    $grant_categories = get_the_terms($grant->ID, 'grant_category');
+                    $category_names = array();
+                    if ($grant_categories && !is_wp_error($grant_categories)) {
+                        foreach (array_slice($grant_categories, 0, 2) as $cat) {
+                            $category_names[] = $cat->name;
+                        }
+                    }
+                    
+                    // 都道府県
+                    $grant_prefectures = get_the_terms($grant->ID, 'grant_prefecture');
+                    $prefecture_name = $grant_prefectures && !is_wp_error($grant_prefectures) ? $grant_prefectures[0]->name : '';
+            ?>
+                <article class="grant-card" 
+                         role="listitem"
+                         itemscope 
+                         itemprop="itemListElement"
+                         itemtype="https://schema.org/GovernmentService">
+                    <meta itemprop="position" content="<?php echo $position++; ?>">
+                    
+                    <?php if ($is_featured) : ?>
+                    <span class="badge badge-featured" aria-label="注目の補助金">注目</span>
+                    <?php endif; ?>
+                    
+                    <a href="<?php echo esc_url($permalink); ?>" 
+                       class="card-link"
+                       itemprop="url"
+                       aria-label="<?php echo esc_attr($grant->post_title); ?>の詳細を見る"
+                       title="<?php echo esc_attr($grant->post_title); ?>の詳細ページへ">
+                        
+                        <header class="card-header">
+                            <div class="card-org" 
+                                 itemprop="provider" 
+                                 itemscope 
+                                 itemtype="https://schema.org/Organization">
+                                <i class="fas fa-building" aria-hidden="true"></i>
+                                <span itemprop="name"><?php echo esc_html($organization ?: '公的機関'); ?></span>
+                            </div>
+                            <button class="btn-bookmark" 
+                                    onclick="event.preventDefault();"
+                                    aria-label="ブックマークに追加"
+                                    type="button">
+                                <i class="far fa-bookmark" aria-hidden="true"></i>
+                            </button>
+                        </header>
+                        
+                        <h3 class="card-title" itemprop="name">
+                            <?php echo esc_html($grant->post_title); ?>
+                        </h3>
+                        
+                        <div class="card-tags">
+                            <?php foreach ($category_names as $cat_name) : ?>
+                            <span class="tag" itemprop="category">
+                                <i class="fas fa-tag" aria-hidden="true"></i>
+                                <span><?php echo esc_html($cat_name); ?></span>
+                            </span>
+                            <?php endforeach; ?>
+                            
+                            <?php if ($prefecture_name) : ?>
+                            <span class="tag tag-location" itemprop="areaServed">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                <span><?php echo esc_html($prefecture_name); ?></span>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <footer class="card-footer">
+                            <?php if ($max_amount) : ?>
+                            <div class="footer-item" 
+                                 itemprop="offers" 
+                                 itemscope 
+                                 itemtype="https://schema.org/Offer">
+                                <i class="fas fa-yen-sign" aria-hidden="true"></i>
+                                <span>最大: <span itemprop="price"><?php echo esc_html($max_amount); ?></span></span>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($deadline_display) : ?>
+                            <div class="footer-item deadline">
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                                <span>締切: 
+                                    <?php if ($deadline_iso) : ?>
+                                    <time datetime="<?php echo esc_attr($deadline_iso); ?>" 
+                                          itemprop="validThrough">
+                                        <?php echo esc_html($deadline_display); ?>
+                                    </time>
+                                    <?php else : ?>
+                                    <?php echo esc_html($deadline_display); ?>
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                            <?php endif; ?>
+                        </footer>
+                    </a>
+                </article>
+            <?php 
+                endforeach;
+            else : 
+            ?>
+                <p class="no-data" role="status">現在、おすすめの補助金はありません。</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+
+<!-- 新着補助金 -->
+<section class="new-grants-section" 
+         aria-labelledby="new-grants-title"
+         itemscope 
+         itemtype="https://schema.org/ItemList">
+    <div class="new-grants-wrapper">
+        <header class="section-header">
+            <div class="header-left">
+                <h2 id="new-grants-title" class="section-title" itemprop="name">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    新着補助金
+                    <span class="count-badge" 
+                          aria-label="<?php echo count($new_grants); ?>件">
+                        <?php echo count($new_grants); ?>
+                    </span>
+                </h2>
+                <p class="section-desc">
+                    <time datetime="<?php echo date('Y-m-d'); ?>" 
+                          itemprop="dateModified">
+                        <?php echo date('Y/m/d'); ?> (<?php echo array('日', '月', '火', '水', '木', '金', '土')[date('w')]; ?>)
+                    </time> 更新 / 毎週月・木曜更新
+                </p>
+            </div>
+            <a href="<?php echo esc_url(home_url('/grants/?orderby=date')); ?>" 
+               class="view-all"
+               aria-label="新着補助金の一覧を見る"
+               title="新着補助金の一覧ページへ">
+                一覧へ <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </a>
+        </header>
+
+        <div class="grants-grid" role="list">
+            <?php 
+            if (!empty($new_grants)) :
+                $position = 1;
+                foreach ($new_grants as $grant) : 
+                    // メタデータ取得
+                    $deadline = get_post_meta($grant->ID, 'deadline', true);
+                    $max_amount = get_post_meta($grant->ID, 'max_amount', true);
+                    $organization = get_post_meta($grant->ID, 'organization', true);
+                    $is_new = (strtotime($grant->post_date) > strtotime('-7 days'));
+                    
+                    // 締切日のフォーマット処理
+                    $deadline_display = '';
+                    $deadline_iso = '';
+                    if ($deadline) {
+                        $timestamp = false;
+                        if (is_numeric($deadline)) {
+                            $timestamp = intval($deadline);
+                        } else {
+                            $timestamp = strtotime($deadline);
+                        }
+                        
+                        if ($timestamp && $timestamp > 0) {
+                            $deadline_display = date('Y/m/d', $timestamp);
+                            $deadline_iso = date('Y-m-d', $timestamp);
+                        } else {
+                            $deadline_display = $deadline;
+                        }
+                    }
+                    
+                    $permalink = get_permalink($grant->ID);
+                    
+                    // カテゴリー
+                    $grant_categories = get_the_terms($grant->ID, 'grant_category');
+                    $category_names = array();
+                    if ($grant_categories && !is_wp_error($grant_categories)) {
+                        foreach (array_slice($grant_categories, 0, 2) as $cat) {
+                            $category_names[] = $cat->name;
+                        }
+                    }
+                    
+                    // 都道府県
+                    $grant_prefectures = get_the_terms($grant->ID, 'grant_prefecture');
+                    $prefecture_name = $grant_prefectures && !is_wp_error($grant_prefectures) ? $grant_prefectures[0]->name : '';
+            ?>
+                <article class="grant-card" 
+                         role="listitem"
+                         itemscope 
+                         itemprop="itemListElement"
+                         itemtype="https://schema.org/GovernmentService">
+                    <meta itemprop="position" content="<?php echo $position++; ?>">
+                    <meta itemprop="datePublished" 
+                          content="<?php echo get_the_date('Y-m-d', $grant->ID); ?>">
+                    
+                    <?php if ($is_new) : ?>
+                    <span class="badge badge-new" aria-label="新着補助金">NEW</span>
+                    <?php endif; ?>
+                    
+                    <a href="<?php echo esc_url($permalink); ?>" 
+                       class="card-link"
+                       itemprop="url"
+                       aria-label="<?php echo esc_attr($grant->post_title); ?>の詳細を見る"
+                       title="<?php echo esc_attr($grant->post_title); ?>の詳細ページへ">
+                        
+                        <header class="card-header">
+                            <div class="card-org" 
+                                 itemprop="provider" 
+                                 itemscope 
+                                 itemtype="https://schema.org/Organization">
+                                <i class="fas fa-building" aria-hidden="true"></i>
+                                <span itemprop="name"><?php echo esc_html($organization ?: '公的機関'); ?></span>
+                            </div>
+                            <button class="btn-bookmark" 
+                                    onclick="event.preventDefault();"
+                                    aria-label="ブックマークに追加"
+                                    type="button">
+                                <i class="far fa-bookmark" aria-hidden="true"></i>
+                            </button>
+                        </header>
+                        
+                        <h3 class="card-title" itemprop="name">
+                            <?php echo esc_html($grant->post_title); ?>
+                        </h3>
+                        
+                        <div class="card-tags">
+                            <?php foreach ($category_names as $cat_name) : ?>
+                            <span class="tag" itemprop="category">
+                                <i class="fas fa-tag" aria-hidden="true"></i>
+                                <span><?php echo esc_html($cat_name); ?></span>
+                            </span>
+                            <?php endforeach; ?>
+                            
+                            <?php if ($prefecture_name) : ?>
+                            <span class="tag tag-location" itemprop="areaServed">
+                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                                <span><?php echo esc_html($prefecture_name); ?></span>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <footer class="card-footer">
+                            <?php if ($max_amount) : ?>
+                            <div class="footer-item" 
+                                 itemprop="offers" 
+                                 itemscope 
+                                 itemtype="https://schema.org/Offer">
+                                <i class="fas fa-yen-sign" aria-hidden="true"></i>
+                                <span>最大: <span itemprop="price"><?php echo esc_html($max_amount); ?></span></span>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($deadline_display) : ?>
+                            <div class="footer-item deadline">
+                                <i class="fas fa-clock" aria-hidden="true"></i>
+                                <span>締切: 
+                                    <?php if ($deadline_iso) : ?>
+                                    <time datetime="<?php echo esc_attr($deadline_iso); ?>" 
+                                          itemprop="validThrough">
+                                        <?php echo esc_html($deadline_display); ?>
+                                    </time>
+                                    <?php else : ?>
+                                    <?php echo esc_html($deadline_display); ?>
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                            <?php endif; ?>
+                        </footer>
+                    </a>
+                </article>
+            <?php 
+                endforeach;
+            else : 
+            ?>
+                <p class="no-data" role="status">現在、新着補助金はありません。</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
 
 <style>
 /* ============================================
@@ -911,7 +1259,7 @@ foreach ($popular_tags as $index => $tag) {
 .search-wrapper {
     position: relative;
     z-index: 1;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0 16px;
 }
@@ -1331,7 +1679,7 @@ foreach ($popular_tags as $index => $tag) {
 /* デスクトップ */
 @media (min-width: 1024px) {
     .popular-categories-wrapper {
-        max-width: 1200px;
+        max-width: 960px;
     }
 }
 
@@ -1405,7 +1753,7 @@ foreach ($popular_tags as $index => $tag) {
 }
 
 .municipality-wrapper {
-    max-width: 1200px;
+    max-width: 960px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -1960,7 +2308,7 @@ foreach ($popular_tags as $index => $tag) {
     .recommend-wrapper,
     .new-grants-wrapper,
     .municipality-wrapper {
-        max-width: 1200px;
+        max-width: 960px;
     }
     
     .category-grid {

@@ -417,8 +417,31 @@ $keywords_string = implode(',', $keywords);
         </div>
     </header>
 
+    <?php
+    // 広告: コンテンツ上部
+    if (function_exists('ji_display_ad')): ?>
+        <div class="archive-ad-space archive-ad-top" style="max-width: 1200px; margin: 20px auto; padding: 0 20px;">
+            <?php ji_display_ad('archive_grant_content_top', 'archive-grant'); ?>
+        </div>
+    <?php endif; ?>
+
     <!-- プルダウン式フィルターセクション -->
-    <section class="dropdown-filter-section" 
+    <!-- モバイル用フローティングフィルターボタン -->
+    <button class="mobile-filter-toggle" 
+            id="mobile-filter-toggle"
+            aria-label="フィルターを開く"
+            aria-expanded="false"
+            type="button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        <span class="filter-count-badge" id="mobile-filter-count" style="display: none;">0</span>
+    </button>
+
+    <!-- フィルターパネル背景オーバーレイ -->
+    <div class="filter-panel-overlay" id="filter-panel-overlay"></div>
+
+    <section class="dropdown-filter-section" id="filter-panel" 
              role="search" 
              aria-label="助成金検索フィルター"
              itemscope 
@@ -442,6 +465,10 @@ $keywords_string = implode(',', $keywords);
                     </svg>
                     絞り込み検索
                 </h2>
+                <button class="mobile-filter-close" 
+                        id="mobile-filter-close"
+                        aria-label="フィルターを閉じる"
+                        type="button">×</button>
                 <button class="filter-reset-all" 
                         id="reset-all-filters-btn" 
                         style="display: none;" 
@@ -1273,10 +1300,318 @@ $keywords_string = implode(',', $keywords);
         </div>
     </section>
 
+    <?php
+    // 広告: コンテンツ下部
+    if (function_exists('ji_display_ad')): ?>
+        <div class="archive-ad-space archive-ad-bottom" style="max-width: 1200px; margin: 20px auto; padding: 0 20px;">
+            <?php ji_display_ad('archive_grant_content_bottom', 'archive-grant'); ?>
+        </div>
+    <?php endif; ?>
+
 </main>
 
 <!-- アクセシビリティ用スタイル -->
 <style>
+/* ===================================
+   Archive Grant - Mobile Filter Improvements
+   モバイルフィルター改善CSS
+   =================================== */
+
+/* モバイルフローティングボタン */
+.mobile-filter-toggle {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    width: 64px;
+    height: 64px;
+    background: var(--color-primary, #000000);
+    color: var(--color-secondary, #ffffff);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.3s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-filter-toggle:active {
+    transform: scale(0.95);
+}
+
+.mobile-filter-toggle .filter-count-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-filter-close {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--color-gray-600, #525252);
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+}
+
+/* フィルターパネル背景オーバーレイ */
+.filter-panel-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 997;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.filter-panel-overlay.active {
+    display: block !important;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .mobile-filter-toggle {
+        display: flex !important;
+    }
+    
+    .mobile-filter-close {
+        display: block !important;
+    }
+    
+    .dropdown-filter-section {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--color-secondary, #ffffff);
+        z-index: 998;
+        padding: 60px 20px 20px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        transform: translateX(100%);
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+        max-height: 100vh;
+    }
+    
+    .dropdown-filter-section.active {
+        transform: translateX(0) !important;
+    }
+    
+    .filter-header {
+        position: sticky;
+        top: 0;
+        background: var(--color-secondary, #ffffff);
+        z-index: 10;
+        padding: 16px 0 !important;
+        margin-bottom: 20px !important;
+        border-bottom: 1px solid var(--color-gray-200, #e5e5e5);
+    }
+    
+    .filter-header::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        right: -20px;
+        top: 0;
+        bottom: 0;
+        background: var(--color-secondary, #ffffff);
+        z-index: -1;
+    }
+}
+
+/* スペース最適化 */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 12px !important;
+    }
+    
+    .category-hero-section {
+        padding: 24px 0 20px !important;
+    }
+    
+    .category-main-title {
+        font-size: 28px !important;
+        margin: 0 0 12px 0 !important;
+        gap: 8px !important;
+    }
+    
+    .year-badge {
+        font-size: 13px !important;
+        padding: 4px 10px !important;
+    }
+    
+    .category-lead-section {
+        margin: 16px 0 !important;
+    }
+    
+    .category-lead-text {
+        font-size: 15px !important;
+    }
+    
+    .category-lead-sub {
+        font-size: 14px !important;
+    }
+    
+    .category-meta-info {
+        gap: 16px !important;
+        margin: 16px 0 20px 0 !important;
+    }
+    
+    .feature-cards-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        margin-top: 20px !important;
+    }
+    
+    .feature-card {
+        padding: 14px !important;
+        gap: 12px !important;
+    }
+    
+    .dropdown-filters-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .search-bar-wrapper {
+        margin-bottom: 16px !important;
+    }
+    
+    .results-section-optimized {
+        padding: 24px 0 !important;
+    }
+    
+    .results-header {
+        margin-bottom: 20px !important;
+        gap: 12px !important;
+    }
+    
+    .grants-container-optimized {
+        gap: 12px !important;
+        margin-bottom: 30px !important;
+        min-height: 300px !important;
+    }
+    
+    .grants-container-optimized[data-view="grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .pagination-wrapper {
+        margin-top: 30px !important;
+        padding: 12px 0 !important;
+    }
+    
+    .pagination-wrapper .page-numbers {
+        min-width: 36px !important;
+        height: 36px !important;
+        font-size: 13px !important;
+        margin: 0 2px !important;
+        padding: 0 8px !important;
+    }
+}
+
+/* デスクトップでもスペース最適化 */
+.category-hero-section {
+    padding: 40px 0 30px !important;
+}
+
+.container {
+    max-width: 1200px !important;
+}
+
+.feature-card {
+    padding: 18px !important;
+    gap: 14px !important;
+}
+
+.dropdown-filter-section {
+    padding: 30px 0 !important;
+}
+
+.results-section-optimized {
+    padding: 40px 0 !important;
+}
+
+.category-main-title {
+    font-size: 42px !important;
+    margin: 0 0 16px 0 !important;
+    gap: 10px !important;
+}
+
+.category-lead-section {
+    margin: 20px 0 !important;
+}
+
+.category-meta-info {
+    gap: 24px !important;
+    margin: 20px 0 30px 0 !important;
+}
+
+.feature-cards-grid {
+    gap: 16px !important;
+    margin-top: 30px !important;
+}
+
+.filter-header {
+    margin-bottom: 24px !important;
+    gap: 12px !important;
+}
+
+.filter-title {
+    font-size: 22px !important;
+}
+
+.search-bar-wrapper {
+    margin-bottom: 20px !important;
+}
+
+.dropdown-filters-grid {
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+}
+
+.results-header {
+    margin-bottom: 30px !important;
+    gap: 16px !important;
+}
+
+.grants-container-optimized {
+    gap: 16px !important;
+    margin-bottom: 40px !important;
+}
+
+.grants-container-optimized[data-view="grid"] {
+    gap: 20px !important;
+}
+
+.pagination-wrapper {
+    margin-top: 40px !important;
+    padding: 16px 0 !important;
+}
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -1304,6 +1639,306 @@ $keywords_string = implode(',', $keywords);
 
 <!-- プルダウン式フィルター専用CSS -->
 <style>
+/* ===================================
+   Archive Grant - Mobile Filter Improvements
+   モバイルフィルター改善CSS
+   =================================== */
+
+/* モバイルフローティングボタン */
+.mobile-filter-toggle {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    width: 64px;
+    height: 64px;
+    background: var(--color-primary, #000000);
+    color: var(--color-secondary, #ffffff);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.3s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-filter-toggle:active {
+    transform: scale(0.95);
+}
+
+.mobile-filter-toggle .filter-count-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-filter-close {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--color-gray-600, #525252);
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+}
+
+/* フィルターパネル背景オーバーレイ */
+.filter-panel-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 997;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.filter-panel-overlay.active {
+    display: block !important;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .mobile-filter-toggle {
+        display: flex !important;
+    }
+    
+    .mobile-filter-close {
+        display: block !important;
+    }
+    
+    .dropdown-filter-section {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--color-secondary, #ffffff);
+        z-index: 998;
+        padding: 60px 20px 20px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        transform: translateX(100%);
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+        max-height: 100vh;
+    }
+    
+    .dropdown-filter-section.active {
+        transform: translateX(0) !important;
+    }
+    
+    .filter-header {
+        position: sticky;
+        top: 0;
+        background: var(--color-secondary, #ffffff);
+        z-index: 10;
+        padding: 16px 0 !important;
+        margin-bottom: 20px !important;
+        border-bottom: 1px solid var(--color-gray-200, #e5e5e5);
+    }
+    
+    .filter-header::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        right: -20px;
+        top: 0;
+        bottom: 0;
+        background: var(--color-secondary, #ffffff);
+        z-index: -1;
+    }
+}
+
+/* スペース最適化 */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 12px !important;
+    }
+    
+    .category-hero-section {
+        padding: 24px 0 20px !important;
+    }
+    
+    .category-main-title {
+        font-size: 28px !important;
+        margin: 0 0 12px 0 !important;
+        gap: 8px !important;
+    }
+    
+    .year-badge {
+        font-size: 13px !important;
+        padding: 4px 10px !important;
+    }
+    
+    .category-lead-section {
+        margin: 16px 0 !important;
+    }
+    
+    .category-lead-text {
+        font-size: 15px !important;
+    }
+    
+    .category-lead-sub {
+        font-size: 14px !important;
+    }
+    
+    .category-meta-info {
+        gap: 16px !important;
+        margin: 16px 0 20px 0 !important;
+    }
+    
+    .feature-cards-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        margin-top: 20px !important;
+    }
+    
+    .feature-card {
+        padding: 14px !important;
+        gap: 12px !important;
+    }
+    
+    .dropdown-filters-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .search-bar-wrapper {
+        margin-bottom: 16px !important;
+    }
+    
+    .results-section-optimized {
+        padding: 24px 0 !important;
+    }
+    
+    .results-header {
+        margin-bottom: 20px !important;
+        gap: 12px !important;
+    }
+    
+    .grants-container-optimized {
+        gap: 12px !important;
+        margin-bottom: 30px !important;
+        min-height: 300px !important;
+    }
+    
+    .grants-container-optimized[data-view="grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .pagination-wrapper {
+        margin-top: 30px !important;
+        padding: 12px 0 !important;
+    }
+    
+    .pagination-wrapper .page-numbers {
+        min-width: 36px !important;
+        height: 36px !important;
+        font-size: 13px !important;
+        margin: 0 2px !important;
+        padding: 0 8px !important;
+    }
+}
+
+/* デスクトップでもスペース最適化 */
+.category-hero-section {
+    padding: 40px 0 30px !important;
+}
+
+.container {
+    max-width: 1200px !important;
+}
+
+.feature-card {
+    padding: 18px !important;
+    gap: 14px !important;
+}
+
+.dropdown-filter-section {
+    padding: 30px 0 !important;
+}
+
+.results-section-optimized {
+    padding: 40px 0 !important;
+}
+
+.category-main-title {
+    font-size: 42px !important;
+    margin: 0 0 16px 0 !important;
+    gap: 10px !important;
+}
+
+.category-lead-section {
+    margin: 20px 0 !important;
+}
+
+.category-meta-info {
+    gap: 24px !important;
+    margin: 20px 0 30px 0 !important;
+}
+
+.feature-cards-grid {
+    gap: 16px !important;
+    margin-top: 30px !important;
+}
+
+.filter-header {
+    margin-bottom: 24px !important;
+    gap: 12px !important;
+}
+
+.filter-title {
+    font-size: 22px !important;
+}
+
+.search-bar-wrapper {
+    margin-bottom: 20px !important;
+}
+
+.dropdown-filters-grid {
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+}
+
+.results-header {
+    margin-bottom: 30px !important;
+    gap: 16px !important;
+}
+
+.grants-container-optimized {
+    gap: 16px !important;
+    margin-bottom: 40px !important;
+}
+
+.grants-container-optimized[data-view="grid"] {
+    gap: 20px !important;
+}
+
+.pagination-wrapper {
+    margin-top: 40px !important;
+    padding: 16px 0 !important;
+}
 /* ===== CSS Variables ===== */
 :root {
     --color-primary: #000000;
@@ -2308,52 +2943,8 @@ $keywords_string = implode(',', $keywords);
         currentMunicipalities: []
     };
     
-    const elements = {
-        grantsContainer: document.getElementById('grants-container'),
-        loadingOverlay: document.getElementById('loading-overlay'),
-        noResults: document.getElementById('no-results'),
-        resultsCount: document.getElementById('current-count'),
-        showingFrom: document.getElementById('showing-from'),
-        showingTo: document.getElementById('showing-to'),
-        pagination: document.getElementById('pagination'),
-        paginationWrapper: document.getElementById('pagination-wrapper'),
-        activeFilters: document.getElementById('active-filters'),
-        activeFilterTags: document.getElementById('active-filter-tags'),
-        
-        keywordSearch: document.getElementById('keyword-search'),
-        searchBtn: document.getElementById('search-btn'),
-        searchClearBtn: document.getElementById('search-clear-btn'),
-        
-        categorySelect: document.getElementById('category-select'),
-        categorySearch: document.getElementById('category-search'),
-        categoryOptions: document.getElementById('category-options'),
-        clearCategoryBtn: document.getElementById('clear-category-btn'),
-        applyCategoryBtn: document.getElementById('apply-category-btn'),
-        categoryCountBadge: document.getElementById('category-count-badge'),
-        
-        regionSelect: document.getElementById('region-select'),
-        
-        prefectureSelect: document.getElementById('prefecture-select'),
-        prefectureSearch: document.getElementById('prefecture-search'),
-        prefectureOptions: document.getElementById('prefecture-options'),
-        clearPrefectureBtn: document.getElementById('clear-prefecture-btn'),
-        applyPrefectureBtn: document.getElementById('apply-prefecture-btn'),
-        prefectureCountBadge: document.getElementById('prefecture-count-badge'),
-        
-        municipalitySelect: document.getElementById('municipality-select'),
-        municipalityWrapper: document.getElementById('municipality-wrapper'),
-        municipalitySearch: document.getElementById('municipality-search'),
-        municipalityOptions: document.getElementById('municipality-options'),
-        selectedPrefectureName: document.getElementById('selected-prefecture-name'),
-        
-        amountSelect: document.getElementById('amount-select'),
-        statusSelect: document.getElementById('status-select'),
-        difficultySelect: document.getElementById('difficulty-select'),
-        sortSelect: document.getElementById('sort-select'),
-        
-        viewBtns: document.querySelectorAll('.view-btn'),
-        resetAllFiltersBtn: document.getElementById('reset-all-filters-btn')
-    };
+    // 要素はinit()内で初期化（DOMロード後に取得）
+    const elements = {};
     
     function init() {
         console.log('🚀 Archive SEO Perfect v18.0 Initialized');
@@ -2363,11 +2954,76 @@ $keywords_string = implode(',', $keywords);
             defaultView: state.view
         });
         
+        // DOMが完全にロードされてから要素を取得
+        initializeElements();
         initializeFromUrlParams();
         setupCustomSelects();
         setupEventListeners();
         setupAccessibility();
         loadGrants();
+    }
+    
+    function initializeElements() {
+        // すべての要素をDOMロード後に取得
+        elements.grantsContainer = document.getElementById('grants-container');
+        elements.loadingOverlay = document.getElementById('loading-overlay');
+        elements.noResults = document.getElementById('no-results');
+        elements.resultsCount = document.getElementById('current-count');
+        elements.showingFrom = document.getElementById('showing-from');
+        elements.showingTo = document.getElementById('showing-to');
+        elements.pagination = document.getElementById('pagination');
+        elements.paginationWrapper = document.getElementById('pagination-wrapper');
+        elements.activeFilters = document.getElementById('active-filters');
+        elements.activeFilterTags = document.getElementById('active-filter-tags');
+        
+        elements.keywordSearch = document.getElementById('keyword-search');
+        elements.searchBtn = document.getElementById('search-btn');
+        elements.searchClearBtn = document.getElementById('search-clear-btn');
+        
+        elements.categorySelect = document.getElementById('category-select');
+        elements.categorySearch = document.getElementById('category-search');
+        elements.categoryOptions = document.getElementById('category-options');
+        elements.clearCategoryBtn = document.getElementById('clear-category-btn');
+        elements.applyCategoryBtn = document.getElementById('apply-category-btn');
+        elements.categoryCountBadge = document.getElementById('category-count-badge');
+        
+        elements.regionSelect = document.getElementById('region-select');
+        
+        elements.prefectureSelect = document.getElementById('prefecture-select');
+        elements.prefectureSearch = document.getElementById('prefecture-search');
+        elements.prefectureOptions = document.getElementById('prefecture-options');
+        elements.clearPrefectureBtn = document.getElementById('clear-prefecture-btn');
+        elements.applyPrefectureBtn = document.getElementById('apply-prefecture-btn');
+        elements.prefectureCountBadge = document.getElementById('prefecture-count-badge');
+        
+        elements.municipalitySelect = document.getElementById('municipality-select');
+        elements.municipalityWrapper = document.getElementById('municipality-wrapper');
+        elements.municipalitySearch = document.getElementById('municipality-search');
+        elements.municipalityOptions = document.getElementById('municipality-options');
+        elements.selectedPrefectureName = document.getElementById('selected-prefecture-name');
+        
+        elements.amountSelect = document.getElementById('amount-select');
+        elements.statusSelect = document.getElementById('status-select');
+        elements.difficultySelect = document.getElementById('difficulty-select');
+        elements.sortSelect = document.getElementById('sort-select');
+        
+        elements.viewBtns = document.querySelectorAll('.view-btn');
+        elements.resetAllFiltersBtn = document.getElementById('reset-all-filters-btn');
+        
+        // モバイルフィルター要素
+        elements.mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+        elements.mobileFilterClose = document.getElementById('mobile-filter-close');
+        elements.filterPanel = document.getElementById('filter-panel');
+        elements.mobileFilterCount = document.getElementById('mobile-filter-count');
+        elements.filterPanelOverlay = document.getElementById('filter-panel-overlay');
+        
+        // 要素が正しく取得できたかログ出力
+        console.log('📱 Mobile filter elements:', {
+            toggle: !!elements.mobileFilterToggle,
+            close: !!elements.mobileFilterClose,
+            panel: !!elements.filterPanel,
+            overlay: !!elements.filterPanelOverlay
+        });
     }
     
     function initializeFromUrlParams() {
@@ -2966,6 +3622,138 @@ $keywords_string = implode(',', $keywords);
         if (elements.resetAllFiltersBtn) {
             elements.resetAllFiltersBtn.addEventListener('click', resetAllFilters);
         }
+        
+        // モバイルフィルターイベント（トグル機能付き）
+        if (elements.mobileFilterToggle) {
+            console.log('✅ Binding click to mobile-filter-toggle');
+            elements.mobileFilterToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔵 Toggle button clicked!');
+                
+                // フィルターパネルが開いているかチェック
+                if (elements.filterPanel && elements.filterPanel.classList.contains('active')) {
+                    console.log('  → Closing filter (toggle)');
+                    closeMobileFilter();
+                } else {
+                    console.log('  → Opening filter');
+                    openMobileFilter();
+                }
+            }, false);
+        } else {
+            console.error('❌ mobile-filter-toggle element not found!');
+        }
+        
+        if (elements.mobileFilterClose) {
+            console.log('✅ Binding click to mobile-filter-close');
+            elements.mobileFilterClose.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔴 Close button clicked!');
+                closeMobileFilter();
+            }, false);
+        } else {
+            console.error('❌ mobile-filter-close element not found!');
+        }
+        
+        // オーバーレイクリックで閉じる
+        if (elements.filterPanelOverlay) {
+            console.log('✅ Binding click to filter-panel-overlay');
+            elements.filterPanelOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('⚫ Overlay clicked!');
+                closeMobileFilter();
+            }, false);
+        } else {
+            console.error('❌ filter-panel-overlay element not found!');
+        }
+        
+        // フィルターパネル内のクリックは伝播を止める＋スクロール制御
+        if (elements.filterPanel) {
+            elements.filterPanel.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // タッチイベントでスクロール制御
+            let startY = 0;
+            
+            elements.filterPanel.addEventListener('touchstart', function(e) {
+                startY = e.touches[0].pageY;
+            }, { passive: true });
+            
+            elements.filterPanel.addEventListener('touchmove', function(e) {
+                const scrollTop = elements.filterPanel.scrollTop;
+                const scrollHeight = elements.filterPanel.scrollHeight;
+                const height = elements.filterPanel.clientHeight;
+                const currentY = e.touches[0].pageY;
+                const delta = currentY - startY;
+                
+                // 上端で上スクロール、または下端で下スクロールの場合のみ背景スクロールを防止
+                if ((scrollTop === 0 && delta > 0) || 
+                    (scrollTop + height >= scrollHeight && delta < 0)) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        } else {
+            console.error('❌ filter-panel element not found!');
+        }
+        
+        // ESCキーでフィルターを閉じる
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && window.innerWidth <= 768) {
+                if (elements.filterPanel && elements.filterPanel.classList.contains('active')) {
+                    console.log('⌨️ ESC key pressed - closing filter');
+                    closeMobileFilter();
+                }
+            }
+        });
+    }
+    
+    function openMobileFilter() {
+        console.log('📱 openMobileFilter() called');
+        if (elements.filterPanel) {
+            elements.filterPanel.classList.add('active');
+            // 背景スクロールを完全にブロック
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.touchAction = 'none';
+            
+            if (elements.filterPanelOverlay) {
+                elements.filterPanelOverlay.classList.add('active');
+                console.log('  ✅ Overlay activated');
+            }
+            if (elements.mobileFilterToggle) {
+                elements.mobileFilterToggle.setAttribute('aria-expanded', 'true');
+            }
+            console.log('  ✅ Filter panel opened successfully');
+        } else {
+            console.error('  ❌ Filter panel element not found!');
+        }
+    }
+    
+    function closeMobileFilter() {
+        console.log('📱 closeMobileFilter() called');
+        if (elements.filterPanel) {
+            elements.filterPanel.classList.remove('active');
+            // 背景スクロール制御を解除
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.touchAction = '';
+            
+            if (elements.filterPanelOverlay) {
+                elements.filterPanelOverlay.classList.remove('active');
+                console.log('  ✅ Overlay deactivated');
+            }
+            if (elements.mobileFilterToggle) {
+                elements.mobileFilterToggle.setAttribute('aria-expanded', 'false');
+            }
+            console.log('  ✅ Filter panel closed successfully');
+        } else {
+            console.error('  ❌ Filter panel element not found!');
+        }
     }
     
     function handleSearchInput() {
@@ -3052,6 +3840,12 @@ $keywords_string = implode(',', $keywords);
         if (state.isLoading) return;
         
         state.isLoading = true;
+        
+        // パフォーマンス測定開始
+        if (window.performance && window.performance.mark) {
+            performance.mark('grants-load-start');
+        }
+        
         showLoading(true);
         
         const formData = new FormData();
@@ -3123,6 +3917,18 @@ $keywords_string = implode(',', $keywords);
         .finally(() => {
             state.isLoading = false;
             showLoading(false);
+            
+            // パフォーマンス測定終了
+            if (window.performance && window.performance.mark) {
+                performance.mark('grants-load-end');
+                try {
+                    performance.measure('grants-load-duration', 'grants-load-start', 'grants-load-end');
+                    const measure = performance.getEntriesByName('grants-load-duration')[0];
+                    console.log(`⚡ Grants loaded in ${Math.round(measure.duration)}ms`);
+                } catch(e) {
+                    // Ignore performance measurement errors
+                }
+            }
         });
     }
     
@@ -3143,7 +3949,23 @@ $keywords_string = implode(',', $keywords);
             elements.noResults.style.display = 'none';
         }
         
-        elements.grantsContainer.innerHTML = grants.map(grant => grant.html).join('');
+        // 仮想スクロール対応（DocumentFragment使用でDOM操作最適化）
+        const fragment = document.createDocumentFragment();
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = grants.map(grant => grant.html).join('');
+        
+        while (tempDiv.firstChild) {
+            fragment.appendChild(tempDiv.firstChild);
+        }
+        
+        // 一括DOM更新（リフローを1回に削減）
+        elements.grantsContainer.innerHTML = '';
+        elements.grantsContainer.appendChild(fragment);
+        
+        // モバイルでフィルター適用後は自動的にパネルを閉じる
+        if (window.innerWidth <= 768) {
+            closeMobileFilter();
+        }
         
         // AI button listeners use event delegation (set up once in unified-frontend.js)
         // No need to re-initialize after AJAX updates
@@ -3320,11 +4142,20 @@ $keywords_string = implode(',', $keywords);
         if (tags.length === 0) {
             elements.activeFilters.style.display = 'none';
             elements.resetAllFiltersBtn.style.display = 'none';
+            if (elements.mobileFilterCount) {
+                elements.mobileFilterCount.style.display = 'none';
+            }
             return;
         }
         
         elements.activeFilters.style.display = 'flex';
         elements.resetAllFiltersBtn.style.display = 'flex';
+        
+        // モバイルフィルターバッジ更新
+        if (elements.mobileFilterCount) {
+            elements.mobileFilterCount.textContent = tags.length;
+            elements.mobileFilterCount.style.display = 'flex';
+        }
         
         elements.activeFilterTags.innerHTML = tags.map(tag => `
             <div class="filter-tag">

@@ -3230,6 +3230,14 @@ $modified_date = get_the_modified_date('c');
         
         <!-- 右サイドバー -->
         <aside class="gus-sidebar" role="complementary" aria-label="サイドバー">
+            
+            <!-- アフィリエイト広告: サイドバー上部 -->
+            <?php if (function_exists('ji_display_ad')): ?>
+                <div class="sidebar-ad-space sidebar-ad-top">
+                    <?php ji_display_ad('single_grant_sidebar_top', 'single-grant'); ?>
+                </div>
+            <?php endif; ?>
+            
             <!-- 目次 -->
             <nav class="gus-sidebar-card" aria-label="目次">
                 <h2 class="gus-sidebar-title">
@@ -3307,6 +3315,13 @@ $modified_date = get_the_modified_date('c');
                     </button>
                 </div>
             </div>
+            
+            <!-- アフィリエイト広告: サイドバー中央 -->
+            <?php if (function_exists('ji_display_ad')): ?>
+                <div class="sidebar-ad-space sidebar-ad-middle">
+                    <?php ji_display_ad('single_grant_sidebar_middle', 'single-grant'); ?>
+                </div>
+            <?php endif; ?>
             
             <!-- 統計 -->
             <div class="gus-sidebar-card">
@@ -3441,6 +3456,14 @@ $modified_date = get_the_modified_date('c');
                 <?php endif; ?>
             </div>
             <?php endif; ?>
+            
+            <!-- アフィリエイト広告: サイドバー下部 -->
+            <?php if (function_exists('ji_display_ad')): ?>
+                <div class="sidebar-ad-space sidebar-ad-bottom">
+                    <?php ji_display_ad('single_grant_sidebar_bottom', 'single-grant'); ?>
+                </div>
+            <?php endif; ?>
+            
         </aside>
     </div>
 </main>
@@ -4180,3 +4203,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php get_footer(); ?>
+(); ?>

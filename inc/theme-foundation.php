@@ -322,7 +322,9 @@ function gi_register_post_types() {
         'menu_position' => 5,
         'menu_icon' => 'dashicons-money-alt',
         'supports' => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields', 'revisions'),
-        'show_in_rest' => true
+        'show_in_rest' => true,
+        'rest_base' => 'grants',
+        'rest_controller_class' => 'WP_REST_Posts_Controller'
     ));
 }
 add_action('init', 'gi_register_post_types');
@@ -331,9 +333,10 @@ add_action('init', 'gi_register_post_types');
 add_action('after_switch_theme', 'flush_rewrite_rules');
 add_action('wp_loaded', function() {
     static $flushed = false;
-    if (!$flushed && !get_option('gi_permalinks_flushed_v4_municipality_fix')) {
+    // Force flush for REST API endpoint fix (v11.0.1)
+    if (!$flushed && !get_option('gi_permalinks_flushed_v11_rest_api_fix')) {
         flush_rewrite_rules(true);
-        update_option('gi_permalinks_flushed_v4_municipality_fix', current_time('mysql'));
+        update_option('gi_permalinks_flushed_v11_rest_api_fix', current_time('mysql'));
         $flushed = true;
     }
 });

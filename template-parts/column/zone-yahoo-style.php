@@ -415,186 +415,22 @@ $recent_columns = new WP_Query(array(
     display: none !important;
 }
 
-/* コラムグリッド（縦並びリスト） */
+/* コラムグリッド */
 .columns-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
 }
 
-.column-card-compact:last-child {
-    border-bottom: none;
-}
-
-/* ============================================
-   Column Card Compact Style (Yahoo Style)
-   コラムカードコンパクトスタイル
-   ============================================ */
-.column-card-compact {
-    background: #ffffff;
-    border-bottom: 1px solid #e5e5e5;
-    transition: background-color 0.2s ease;
-}
-
-.column-card-compact:hover {
-    background: #f9f9f9;
-}
-
-.card-link-compact {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-    padding: 16px;
-}
-
-.card-inner {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-}
-
-.card-thumb {
-    position: relative;
-    width: 140px;
-    height: 94px;
-    flex-shrink: 0;
-    border-radius: 4px;
-    overflow: hidden;
-    background: #f0f0f0;
-}
-
-.card-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.column-card-compact:hover .card-thumb img {
-    transform: scale(1.05);
-}
-
-.badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    padding: 3px 8px;
-    font-size: 10px;
-    font-weight: 900;
-    border-radius: 3px;
-    z-index: 2;
-}
-
-.badge-new {
-    background: #ffeb3b;
-    color: #000000;
-    border: 1px solid #000000;
-}
-
-.card-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.card-meta {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.meta-category {
-    display: inline-block;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #000000;
-    background: #f5f5f5;
-    border: 1px solid #d4d4d4;
-    border-radius: 3px;
-}
-
-.card-title-compact {
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.5;
-    color: #000000;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.column-card-compact:hover .card-title-compact {
-    color: #2196f3;
-}
-
-.card-excerpt-compact {
-    font-size: 13px;
-    line-height: 1.6;
-    color: #666666;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.card-footer-meta {
-    display: flex;
-    gap: 12px;
-    font-size: 12px;
-    color: #999999;
-    margin-top: auto;
-}
-
-.card-footer-meta span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.card-footer-meta i {
-    font-size: 11px;
-}
-
-.meta-date i {
-    color: #2196f3;
-}
-
-.meta-views i {
-    color: #9c27b0;
-}
-
-/* Column card compact responsive */
-@media (max-width: 640px) {
-    .card-inner {
-        gap: 12px;
+@media (min-width: 640px) {
+    .columns-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    
-    .card-thumb {
-        width: 100px;
-        height: 67px;
-    }
-    
-    .card-title-compact {
-        font-size: 15px;
-    }
-    
-    .card-excerpt-compact {
-        font-size: 12px;
-    }
-    
-    .card-footer-meta {
-        font-size: 11px;
-        gap: 8px;
+}
+
+@media (min-width: 1024px) {
+    .columns-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
@@ -729,112 +565,44 @@ $recent_columns = new WP_Query(array(
     }
     
     // カテゴリ別コラムをAjaxで読み込み
-    async function loadCategoryColumns(panel, categorySlug) {
+    function loadCategoryColumns(panel, categorySlug) {
         const grid = panel.querySelector('.columns-grid');
         if (!grid) return;
         
         // ローディング表示
         grid.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i><p>読み込み中...</p></div>';
         
-        try {
-            // WordPressのREST APIを使用してコラムを取得（埋め込みデータも含む）
-            const restUrl = window.location.origin + '/wp-json/wp/v2/columns?column_category=' + categorySlug + '&per_page=9&orderby=date&order=desc&_embed=1';
-            
-            const response = await fetch(restUrl);
-            
-            if (!response.ok) {
-                console.error('[Column Tabs] API error:', response.status, restUrl);
-                throw new Error(`API returned ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                // コラムカードをレンダリング
-                grid.innerHTML = renderColumnCards(data);
-            } else {
-                grid.innerHTML = '<p class="no-data"><i class="fas fa-info-circle"></i>このカテゴリのコラムはまだありません。</p>';
-            }
-            panel.dataset.loaded = 'true';
-        } catch (error) {
-            console.error('[Column Tabs] Load error:', error);
-            grid.innerHTML = '<p class="no-data"><i class="fas fa-exclamation-circle"></i>読み込みに失敗しました。</p>';
-        }
+        // WordPressのREST APIを使用してコラムを取得
+        const restUrl = window.location.origin + '/wp-json/wp/v2/columns?column_category=' + categorySlug + '&per_page=9&orderby=date&order=desc';
+        
+        fetch(restUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    // コラムカードをレンダリング
+                    grid.innerHTML = data.map(column => renderColumnCard(column)).join('');
+                } else {
+                    grid.innerHTML = '<p class="no-data"><i class="fas fa-info-circle"></i>このカテゴリのコラムはまだありません。</p>';
+                }
+                panel.dataset.loaded = 'true';
+            })
+            .catch(error => {
+                console.error('[Column Tabs] Load error:', error);
+                grid.innerHTML = '<p class="no-data"><i class="fas fa-exclamation-circle"></i>読み込みに失敗しました。</p>';
+            });
     }
     
-    // コラムカードリストをレンダリング（archive-column.phpと同じ構造）
-    function renderColumnCards(posts) {
-        let html = '';
-        posts.forEach(post => {
-            // Get thumbnail from embedded featured media
-            let thumbnail = '';
-            if (post._embedded && post._embedded['wp:featuredmedia'] && post._embedded['wp:featuredmedia'][0]) {
-                thumbnail = post._embedded['wp:featuredmedia'][0].source_url || '';
-            }
-            
-            // Get category from embedded data
-            let categoryName = '';
-            if (post._embedded && post._embedded['wp:term'] && post._embedded['wp:term'][0]) {
-                const categories = post._embedded['wp:term'][0];
-                if (categories && categories.length > 0) {
-                    categoryName = categories[0].name;
-                }
-            }
-            
-            const views = post.meta?.view_count || 0;
-            const postDate = new Date(post.date);
-            const formattedDate = `${postDate.getFullYear()}/${String(postDate.getMonth() + 1).padStart(2, '0')}/${String(postDate.getDate()).padStart(2, '0')}`;
-            
-            // Check if post is new (within 7 days)
-            const isNew = (Date.now() - postDate.getTime()) < (7 * 24 * 60 * 60 * 1000);
-            
-            // Generate excerpt from content
-            let excerpt = '';
-            if (post.excerpt && post.excerpt.rendered) {
-                const div = document.createElement('div');
-                div.innerHTML = post.excerpt.rendered;
-                excerpt = div.textContent.substring(0, 100) + '...';
-            }
-            
-            // Match the template structure from template-parts/column/card.php
-            html += `
-                <article class="column-card-compact">
-                    <a href="${post.link}" class="card-link-compact">
-                        <div class="card-inner">
-                            ${thumbnail ? `
-                                <div class="card-thumb">
-                                    <img src="${thumbnail}" 
-                                         alt="${post.title.rendered}"
-                                         loading="lazy">
-                                    ${isNew ? '<span class="badge badge-new">NEW</span>' : ''}
-                                </div>
-                            ` : ''}
-                            <div class="card-text">
-                                <div class="card-meta">
-                                    ${categoryName ? `<span class="meta-category">${categoryName}</span>` : ''}
-                                </div>
-                                <h3 class="card-title-compact">${post.title.rendered}</h3>
-                                ${excerpt ? `<p class="card-excerpt-compact">${excerpt}</p>` : ''}
-                                <div class="card-footer-meta">
-                                    <span class="meta-date">
-                                        <i class="fas fa-calendar"></i>
-                                        ${formattedDate}
-                                    </span>
-                                    ${views > 0 ? `
-                                        <span class="meta-views">
-                                            <i class="fas fa-eye"></i>
-                                            ${Number(views).toLocaleString()}
-                                        </span>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </article>
-            `;
-        });
-        
-        return html;
+    // コラムカードをレンダリング (簡易版)
+    function renderColumnCard(column) {
+        // このレンダリングは実際にはget_template_part()で生成されたカードを使用することが望ましい
+        // ここでは最小限の実装
+        return `
+            <article class="column-card">
+                <a href="${column.link}" class="column-card-link">
+                    <h3 class="column-card-title">${column.title.rendered}</h3>
+                </a>
+            </article>
+        `;
     }
     
     // 初期化
