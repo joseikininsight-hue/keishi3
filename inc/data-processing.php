@@ -73,6 +73,17 @@ function gi_parse_amount_from_text($text) {
 }
 
 /**
+ * 数値をフォーマットする（カンマ区切り）
+ * エイリアス関数 - number_format()のラッパー
+ */
+function gi_format_number($number, $decimals = 0) {
+    if (!is_numeric($number)) {
+        return '0';
+    }
+    return number_format($number, $decimals);
+}
+
+/**
  * 締切日のフォーマット表示
  */
 function gi_format_deadline_for_display($deadline) {

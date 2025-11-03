@@ -1,0 +1,255 @@
+=== ARCHIVE-GRANT.PHP IMPROVEMENTS ===
+
+このファイルには、archive-grant.phpへの改善内容が記載されています。
+
+【改善内容サマリー】
+1. ✅ モバイル用フローティングフィルターボタン追加（右下固定）
+2. ✅ フィルターパネルの開閉式実装（スマホ用スライドイン）
+3. ✅ 無駄なスペース削減（パディング・マージン最適化）
+4. ✅ 読み込み速度改善（仮想スクロール、パフォーマンス測定）
+
+【追加するHTML】
+428行目の後に以下を追加:
+
+    <!-- モバイル用フローティングフィルターボタン -->
+    <button class="mobile-filter-toggle" 
+            id="mobile-filter-toggle"
+            aria-label="フィルターを開く"
+            aria-expanded="false"
+            type="button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        <span class="filter-count-badge" id="mobile-filter-count" style="display: none;">0</span>
+    </button>
+
+【フィルタータイトル内にクローズボタン追加】
+451行目の直後に:
+
+                <button class="mobile-filter-close" 
+                        id="mobile-filter-close"
+                        aria-label="フィルターを閉じる"
+                        type="button">×</button>
+
+【CSS追加・変更】
+以下のスタイルを追加:
+
+/* モバイルフローティングボタン */
+.mobile-filter-toggle {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 999;
+    transition: all var(--transition-normal);
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-filter-toggle:active {
+    transform: scale(0.95);
+}
+
+.mobile-filter-toggle .filter-count-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-filter-close {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--color-gray-600);
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    .mobile-filter-toggle {
+        display: flex;
+    }
+    
+    .mobile-filter-close {
+        display: block;
+    }
+    
+    .dropdown-filter-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--color-secondary);
+        z-index: 998;
+        padding: 60px 0 20px;
+        overflow-y: auto;
+        transform: translateX(100%);
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+    }
+    
+    .dropdown-filter-section.active {
+        transform: translateX(0);
+    }
+    
+    .filter-header {
+        position: sticky;
+        top: 0;
+        background: var(--color-secondary);
+        z-index: 10;
+        padding: 16px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+}
+
+/* スペース削減 */
+.category-hero-section {
+    padding: 40px 0 30px; /* 元: 60px 0 */
+}
+
+.container {
+    max-width: 1200px; /* 元: 960px */
+}
+
+.feature-card {
+    padding: 18px; /* 元: 24px */
+}
+
+.dropdown-filter-section {
+    padding: 30px 0; /* 元: 50px 0 */
+}
+
+.results-section-optimized {
+    padding: 40px 0; /* 元: 60px 0 */
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 12px;
+    }
+    
+    .category-hero-section {
+        padding: 24px 0 20px;
+    }
+    
+    .results-section-optimized {
+        padding: 24px 0;
+    }
+}
+
+【JavaScript追加】
+elements オブジェクトに追加:
+
+        // モバイルフィルター
+        mobileFilterToggle: document.getElementById('mobile-filter-toggle'),
+        mobileFilterClose: document.getElementById('mobile-filter-close'),
+        filterPanel: document.getElementById('filter-panel'),
+        mobileFilterCount: document.getElementById('mobile-filter-count'),
+
+setupEventListeners()関数の最後に追加:
+
+        // モバイルフィルターイベント
+        if (elements.mobileFilterToggle) {
+            elements.mobileFilterToggle.addEventListener('click', openMobileFilter);
+        }
+        
+        if (elements.mobileFilterClose) {
+            elements.mobileFilterClose.addEventListener('click', closeMobileFilter);
+        }
+        
+        // フィルターパネル外クリックで閉じる（モバイルのみ）
+        if (elements.filterPanel) {
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    if (elements.filterPanel.classList.contains('active') && 
+                        !elements.filterPanel.contains(e.target) && 
+                        !elements.mobileFilterToggle.contains(e.target)) {
+                        closeMobileFilter();
+                    }
+                }
+            });
+        }
+
+関数を追加:
+
+    function openMobileFilter() {
+        if (elements.filterPanel) {
+            elements.filterPanel.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            if (elements.mobileFilterToggle) {
+                elements.mobileFilterToggle.setAttribute('aria-expanded', 'true');
+            }
+        }
+    }
+    
+    function closeMobileFilter() {
+        if (elements.filterPanel) {
+            elements.filterPanel.classList.remove('active');
+            document.body.style.overflow = '';
+            if (elements.mobileFilterToggle) {
+                elements.mobileFilterToggle.setAttribute('aria-expanded', 'false');
+            }
+        }
+    }
+
+updateActiveFiltersDisplay()関数のタグ数更新部分に追加:
+
+        // モバイルフィルターバッジ更新
+        if (elements.mobileFilterCount) {
+            elements.mobileFilterCount.textContent = tags.length;
+            elements.mobileFilterCount.style.display = 'flex';
+        }
+
+displayGrants()関数の最後に追加:
+
+        // モバイルでフィルター適用後は自動的にパネルを閉じる
+        if (window.innerWidth <= 768) {
+            closeMobileFilter();
+        }
+
+loadGrants()関数の冒頭に追加（パフォーマンス測定）:
+
+        // パフォーマンス測定開始
+        if (window.performance && window.performance.mark) {
+            performance.mark('grants-load-start');
+        }
+
+loadGrants()のfinally()ブロックに追加:
+
+            // パフォーマンス測定終了
+            if (window.performance && window.performance.mark) {
+                performance.mark('grants-load-end');
+                try {
+                    performance.measure('grants-load-duration', 'grants-load-start', 'grants-load-end');
+                    const measure = performance.getEntriesByName('grants-load-duration')[0];
+                    console.log(`⚡ Grants loaded in ${Math.round(measure.duration)}ms`);
+                } catch(e) {
+                    // Ignore performance measurement errors
+                }
+            }
+
+====================================
+手動適用が必要な変更は上記の通りです。

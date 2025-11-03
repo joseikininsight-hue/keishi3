@@ -1,0 +1,228 @@
+/* --- ものづくり補助金記事 スタイリング --- */
+
+/* 記事全体のコンテナと基本フォント */
+.monozukuri-article-container {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    line-height: 1.8;
+    color: #333;
+    background-color: #fff;
+    padding: 20px;
+    max-width: 800px; /* 読みやすい記事幅に設定 */
+    margin: 0 auto;
+}
+
+/* --- 見出し (SEOと階層構造の明確化) --- */
+.monozukuri-article-container h1,
+.monozukuri-article-container h2,
+.monozukuri-article-container h3,
+.monozukuri-article-container h4 {
+    font-weight: 700;
+    color: #111;
+    line-height: 1.4;
+    margin-top: 2.5em;
+    margin-bottom: 1em;
+}
+
+/* 記事タイトル (H1はWordPress側で設定想定) */
+.monozukuri-article-container h1 {
+    font-size: 2.2rem;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+}
+
+/* 章タイトル (H2) */
+.monozukuri-article-container h2 {
+    font-size: 1.8rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 3em;
+}
+.monozukuri-article-container h2::before {
+    content: "CHAPTER";
+    display: block;
+    font-size: 0.7rem;
+    color: #888;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* 節タイトル (H3) */
+.monozukuri-article-container h3 {
+    font-size: 1.4rem;
+    border-left: 5px solid #333;
+    padding-left: 15px;
+}
+
+/* 小見出し (H4) */
+.monozukuri-article-container h4 {
+    font-size: 1.2rem;
+    color: #444;
+    border-bottom: 1px dotted #ccc;
+    padding-bottom: 5px;
+}
+
+/* --- 目次 (TOC) スタイリング --- */
+.article-toc {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    padding: 25px 30px;
+    margin-bottom: 2.5em;
+    border-radius: 8px;
+}
+.article-toc h2 {
+    font-size: 1.3rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-top: 0;
+    text-align: center;
+}
+.article-toc h2::before {
+    content: none; /* 目次のH2にはCHAPTERをつけない */
+}
+.article-toc ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+.article-toc > ul > li {
+    font-weight: 600;
+    margin-top: 15px;
+}
+.article-toc ul ul {
+    padding-left: 20px;
+    margin-top: 8px;
+}
+.article-toc ul ul li {
+    font-weight: 400;
+    font-size: 0.95rem;
+    margin-top: 5px;
+}
+.article-toc a {
+    text-decoration: none;
+    color: #444;
+    transition: color 0.2s;
+}
+.article-toc a:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+/* --- テーブル スタイリング --- */
+.monozukuri-article-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2em 0;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.monozukuri-article-container th,
+.monozukuri-article-container td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: top;
+}
+.monozukuri-article-container th {
+    background-color: #f4f4f4;
+    font-weight: 700;
+    color: #222;
+}
+.monozukuri-article-container tbody tr:nth-child(odd) {
+    background-color: #fcfcfc;
+}
+
+/* --- 引用・強調ブロック --- */
+.monozukuri-article-container blockquote {
+    background: #f9f9f9;
+    border-left: 5px solid #ccc;
+    margin: 1.5em 0;
+    padding: 20px 25px;
+    font-size: 1rem;
+}
+.monozukuri-article-container blockquote p {
+    margin: 0;
+}
+
+/* --- リスト スタイリング --- */
+.monozukuri-article-container ul,
+.monozukuri-article-container ol {
+    margin: 1.5em 0;
+    padding-left: 25px;
+}
+.monozukuri-article-container li {
+    margin-bottom: 0.8em;
+}
+
+/* --- カスタム強調ボックス --- */
+.highlight-box,
+.failure-points,
+.success-pillars {
+    border: 1px solid #e0e0e0;
+    background: #fdfdfd;
+    padding: 25px;
+    margin: 2em 0;
+    border-radius: 8px;
+}
+.box-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 赤文字の強調ボックス (不採択理由など) */
+.failure-points {
+    border-color: #d9a0a0;
+    background: #fff8f8;
+}
+.failure-points .box-title {
+    color: #a94442;
+    border-bottom-color: #f0dada;
+}
+
+/* 青文字の強調ボックス (採択の柱など) */
+.success-pillars {
+    border-color: #a0c2d9;
+    background: #f8fbff;
+}
+.success-pillars .box-title {
+    color: #31708f;
+    border-bottom-color: #daeef0;
+}
+
+/* チェックリスト */
+.final-checklist {
+    list-style: none;
+    padding-left: 0;
+}
+.final-checklist li {
+    position: relative;
+    padding-left: 30px;
+    font-size: 1.05rem;
+}
+.final-checklist li::before {
+    content: '□';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* --- その他 --- */
+.monozukuri-article-container strong {
+    color: #000;
+    font-weight: 700;
+}
+.monozukuri-article-container p {
+    margin-bottom: 1.5em;
+}
+.monozukuri-article-container .source-credit {
+    font-size: 0.85rem;
+    color: #777;
+    text-align: right;
+    margin-top: -1em;
+}

@@ -633,11 +633,11 @@ if (!function_exists('gi_get_cached_stats')) {
                                 <i class="fas fa-stethoscope"></i>
                                 <span>診断システム</span>
                             </a>
-                            <a href="<?php echo esc_url(get_post_type_archive_link('grant') . '?status=active'); ?>" class="ji-footer-link">
+                            <a href="<?php echo esc_url(home_url('/grants/?status=active')); ?>" class="ji-footer-link">
                                 <i class="fas fa-clock"></i>
                                 <span>募集中の助成金</span>
                             </a>
-                            <a href="<?php echo esc_url(get_post_type_archive_link('grant') . '?orderby=new'); ?>" class="ji-footer-link">
+                            <a href="<?php echo esc_url(home_url('/grants/?orderby=new')); ?>" class="ji-footer-link">
                                 <i class="fas fa-star"></i>
                                 <span>新着助成金</span>
                             </a>
@@ -687,9 +687,9 @@ if (!function_exists('gi_get_cached_stats')) {
                                 <i class="fas fa-envelope"></i>
                                 <span>お問い合わせ</span>
                             </a>
-                            <a href="<?php echo esc_url(home_url('/blog/')); ?>" class="ji-footer-link">
+                            <a href="<?php echo esc_url(home_url('/column/')); ?>" class="ji-footer-link">
                                 <i class="fas fa-rss"></i>
-                                <span>ブログ・お知らせ</span>
+                                <span>コラム・お知らせ</span>
                             </a>
                             <a href="<?php echo esc_url(home_url('/support/')); ?>" class="ji-footer-link">
                                 <i class="fas fa-life-ring"></i>
@@ -866,6 +866,9 @@ if (!function_exists('gi_get_cached_stats')) {
     })();
     </script>
 
+    <?php wp_footer(); ?>
+</body>
+</html>
     <?php wp_footer(); ?>
 </body>
 </html>

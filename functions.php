@@ -8,7 +8,22 @@
  * - Eliminated folder over-organization
  * 
  * @package Grant_Insight_Perfect
- * @version 9.0.0 (Consolidated Edition)
+ * @version 10.0.0 (Yahoo!-Style Tabbed Grant Browsing)
+ * 
+ * Changelog v10.0.0:
+ * - Implemented Yahoo! JAPAN-style tabbed grant browsing system
+ * - Added 4 tabs: 締切間近(30日以内), おすすめ, 新着, あなたにおすすめ
+ * - Added cookie-based viewing history tracking
+ * - Created reusable grant card template (template-parts/grant/card.php)
+ * - Added personalized recommendations based on browsing history
+ * - Replaced separate grant sections with unified tabbed interface
+ * - Current theme styling (black/white, Yahoo! functionality)
+ *
+ * Previous v9.2.1:
+ * - Fixed Jetpack duplicate store registration errors
+ * - Added React key prop warning fixes
+ * - Fixed Gutenberg block editor JavaScript errors
+ * - Added customizer 500 error prevention
  */
 
 // セキュリティチェック
@@ -18,7 +33,7 @@ if (!defined('ABSPATH')) {
 
 // テーマバージョン定数
 if (!defined('GI_THEME_VERSION')) {
-    define('GI_THEME_VERSION', '9.2.0'); // AI button event delegation + nonce fix
+    define('GI_THEME_VERSION', '11.0.1'); // REST API endpoint fix for grant post type
 }
 if (!defined('GI_THEME_PREFIX')) {
     define('GI_THEME_PREFIX', 'gi_');
@@ -44,6 +59,91 @@ if (is_admin() && !wp_doing_ajax()) {
             define('AUTOSAVE_INTERVAL', 300); // 5 minutes
         }
     }, 1);
+}
+
+/**
+ * 🔧 JavaScript Error Handling & Optimization
+ * Fixes for WordPress admin JavaScript errors
+ */
+
+// Dequeue problematic Jetpack scripts to prevent duplicate store registration
+add_action('admin_enqueue_scripts', 'gi_fix_jetpack_conflicts', 100);
+function gi_fix_jetpack_conflicts() {
+    // Check if Jetpack is active
+    if (class_exists('Jetpack')) {
+        // Deregister duplicate Jetpack stores
+        wp_deregister_script('jetpack-ai-logo-generator');
+        wp_deregister_script('jetpack-modules-store');
+    }
+}
+
+// Fix Gutenberg block editor JavaScript errors
+add_action('enqueue_block_editor_assets', 'gi_fix_block_editor_errors', 100);
+function gi_fix_block_editor_errors() {
+    // Add error handling for block editor
+    wp_add_inline_script('wp-blocks', '
+        (function() {
+            // Prevent duplicate store registration errors
+            var originalRegisterStore = wp.data && wp.data.registerStore;
+            if (originalRegisterStore) {
+                wp.data.registerStore = function(storeName, options) {
+                    try {
+                        return originalRegisterStore.call(wp.data, storeName, options);
+                    } catch (error) {
+                        if (!error.message.includes("already registered")) {
+                            console.error("Store registration error:", error);
+                        }
+                        return wp.data.select(storeName);
+                    }
+                };
+            }
+        })();
+    ', 'before');
+}
+
+// Disable Jetpack modules that cause conflicts
+add_filter('jetpack_get_available_modules', 'gi_disable_problematic_jetpack_modules', 999);
+function gi_disable_problematic_jetpack_modules($modules) {
+    // Remove modules that cause store registration conflicts
+    $problematic_modules = array('photon', 'photon-cdn', 'videopress');
+    foreach ($problematic_modules as $module) {
+        if (isset($modules[$module])) {
+            unset($modules[$module]);
+        }
+    }
+    return $modules;
+}
+
+// Fix customizer 500 error by limiting customizer features
+add_action('customize_register', 'gi_fix_customizer_errors', 999);
+function gi_fix_customizer_errors($wp_customize) {
+    // Remove sections that might cause conflicts
+    $wp_customize->remove_section('custom_css');
+}
+
+// Add error logging for JavaScript errors
+add_action('wp_footer', 'gi_add_js_error_logging');
+add_action('admin_footer', 'gi_add_js_error_logging');
+function gi_add_js_error_logging() {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        ?>
+        <script>
+        // Global error handler for JavaScript
+        window.addEventListener('error', function(e) {
+            if (console && console.error) {
+                console.error('JS Error caught:', e.message, 'at', e.filename + ':' + e.lineno);
+            }
+        });
+        
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(e) {
+            if (console && console.error) {
+                console.error('Unhandled Promise Rejection:', e.reason);
+            }
+        });
+        </script>
+        <?php
+    }
 }
 
 // Purpose page rewrite rules
@@ -253,6 +353,7 @@ $required_files = array(
     // Admin & UI
     'admin-functions.php',         // 管理画面カスタマイズ + メタボックス (統合済み)
     'acf-fields.php',              // ACF設定とフィールド定義
+    'customizer-error-handler.php', // カスタマイザーエラーハンドリング (v9.2.1+)
     
     // Core functionality
     'card-display.php',            // カードレンダリング・表示機能
@@ -276,9 +377,8 @@ $required_files = array(
     // 'grant-advanced-seo-enhancer.php'   // SEO大幅強化（OGP、Schema.org拡張、内部リンク）
     
     // Column System (v1.0.0+) - NEW: コラム機能統合システム
-    // TEMPORARILY DISABLED for debugging
-    // 'column-system.php',  // コラム機能（カスタム投稿タイプ、ACF、補助金連携、Analytics）
-    // 'column-admin-ui.php',  // コラム管理UI（Phase 3: 承認ワークフロー、分析ダッシュボード、設定）
+    'column-system.php',  // コラム機能（カスタム投稿タイプ、ACF、補助金連携、Analytics）
+    // 'column-admin-ui.php',  // コラム管理UI（Phase 3: 承認ワークフロー、分析ダッシュボード、設定） - TEMPORARILY DISABLED
 );
 
 // ファイルを安全に読み込み
@@ -378,3 +478,82 @@ function gi_enqueue_column_assets() {
 }
 add_action('wp_enqueue_scripts', 'gi_enqueue_column_assets');
 
+/**
+ * Enqueue Admin Error Fix Script
+ * 管理画面のJavaScriptエラーを修正するスクリプトを読み込み
+ * 
+ * @return void
+ */
+function gi_enqueue_admin_error_fix() {
+    wp_enqueue_script(
+        'gi-admin-error-fix',
+        get_template_directory_uri() . '/assets/js/admin-error-fix.js',
+        array('jquery'),
+        GI_THEME_VERSION,
+        false // Load in header to catch early errors
+    );
+}
+add_action('admin_enqueue_scripts', 'gi_enqueue_admin_error_fix', 1); // Priority 1 to load early
+
+/**
+ * Enqueue Ad Error Handler Script
+ * 広告エラーを処理するスクリプトを読み込み
+ * 
+ * @return void
+ */
+function gi_enqueue_ad_error_handler() {
+    wp_enqueue_script(
+        'gi-ad-error-handler',
+        get_template_directory_uri() . '/assets/js/ad-error-handler.js',
+        array(),
+        GI_THEME_VERSION,
+        true // Load in footer
+    );
+}
+add_action('wp_enqueue_scripts', 'gi_enqueue_ad_error_handler');
+
+/**
+ * Enqueue Grant Viewing History Tracker
+ * 補助金閲覧履歴トラッキングスクリプトを読み込み
+ * 
+ * @return void
+ */
+function gi_enqueue_viewing_history() {
+    wp_enqueue_script(
+        'gi-viewing-history',
+        get_template_directory_uri() . '/assets/js/grant-viewing-history.js',
+        array(),
+        GI_THEME_VERSION,
+        true // Load in footer
+    );
+    
+    // Ajax URL をJavaScriptに渡す
+    wp_localize_script('gi-viewing-history', 'giAjaxConfig', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('gi_viewing_history_nonce')
+    ));
+}
+add_action('wp_enqueue_scripts', 'gi_enqueue_viewing_history');
+
+/**
+ * REST API: コラムカテゴリフィルタリングに関する注記
+ * 
+ * WordPressのREST APIは標準でタクソノミーIDによるフィルタリングをサポートしています。
+ * 
+ * - Post Type: 'column' with rest_base 'columns'
+ * - Taxonomy: 'column_category' with rest_base 'column-categories'
+ * - Filtering: /wp-json/wp/v2/columns?column-categories={term_id}
+ * 
+ * Note: column-categoriesパラメータはterm ID（整数）のみを受け付けます。
+ * スラッグによるフィルタリングは標準ではサポートされていないため、
+ * JavaScriptでterm IDを使用する必要があります。
+ */
+
+
+/**
+ * Affiliate Ad Manager System
+ * アフィリエイト広告管理システム読み込み
+ * 
+ * @since 1.0.0
+ */
+require_once get_template_directory() . '/inc/affiliate-ad-manager.php';

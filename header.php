@@ -146,7 +146,7 @@
             --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             
             /* Layout */
-            --header-height: 68px;
+            --header-height: 56px;
             --max-width: 1200px;
         }
         
@@ -206,14 +206,14 @@
         }
         
         .ji-logo-image {
-            height: 42px;
+            height: 32px;
             width: auto;
             object-fit: contain;
         }
         
         @media (min-width: 768px) {
             .ji-logo-image {
-                height: 48px;
+                height: 36px;
             }
         }
         
@@ -391,7 +391,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: var(--space-5) var(--space-6);
+            padding: var(--space-3) var(--space-4);
             border-bottom: 1px solid var(--ji-menu-border);
             position: sticky;
             top: 0;
@@ -403,33 +403,33 @@
         .ji-mobile-logo {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
+            gap: var(--space-1);
         }
         
         .ji-mobile-logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 22px;
+            height: 22px;
             background: var(--ji-white);
-            border-radius: var(--radius-md);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: var(--fw-black);
-            font-size: 1.125rem;
+            font-size: 0.6875rem;
             color: var(--ji-black);
             letter-spacing: -0.02em;
         }
         
         .ji-mobile-logo-text {
-            font-size: 1.0625rem;
+            font-size: 0.6875rem;
             font-weight: var(--fw-bold);
             color: var(--ji-white);
             letter-spacing: 0.01em;
         }
         
         .ji-mobile-close {
-            width: 44px;
-            height: 44px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -438,7 +438,7 @@
             border: none;
             cursor: pointer;
             transition: all var(--transition-fast);
-            font-size: 1.5rem;
+            font-size: 1rem;
         }
         
         .ji-mobile-close:hover {
@@ -448,72 +448,72 @@
         
         /* Mobile Menu Content */
         .ji-mobile-content {
-            padding: var(--space-8) var(--space-6) var(--space-16);
+            padding: var(--space-4) var(--space-4) var(--space-8);
         }
         
         /* Menu Section */
         .ji-menu-section {
-            margin-bottom: var(--space-12);
+            margin-bottom: var(--space-5);
         }
         
         .ji-section-label {
-            font-size: 0.6875rem;
+            font-size: 0.8125rem;  /* 13px - 2 levels up (9px × 1.44) */
             color: var(--ji-menu-text-dim);
             font-weight: var(--fw-semibold);
-            margin-bottom: var(--space-4);
+            margin-bottom: var(--space-2);
             letter-spacing: 0.1em;
             text-transform: uppercase;
         }
         
         .ji-section-title {
-            font-size: 1.75rem;
+            font-size: 1.625rem;  /* 26px - 2 levels up (18px × 1.44) */
             color: var(--ji-white);
             font-weight: var(--fw-bold);
-            margin-bottom: var(--space-8);
+            margin-bottom: var(--space-4);
             letter-spacing: -0.02em;
             line-height: 1.3;
         }
         
-        /* Menu Grid - 2 Columns */
+        /* Menu Grid - 2 Columns Layout */
+        /* Force 2-column grid - overrides any external CSS */
         .ji-menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-8) var(--space-6);
-            margin-bottom: var(--space-6);
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: var(--space-4) var(--space-3) !important;
+            margin-bottom: var(--space-3) !important;
         }
         
-        @media (max-width: 480px) {
-            .ji-menu-grid {
-                grid-template-columns: 1fr;
-                gap: var(--space-6);
-            }
-        }
+        /* Removed responsive breakpoint - always show 2 columns */
+        /* User requested 2-column layout on all screen sizes */
         
+        /* Menu Column - Contains title and items */
         .ji-menu-column {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-3);
+            display: flex !important;
+            flex-direction: column !important;
+            gap: var(--space-1) !important;
         }
         
+        /* Column Title */
         .ji-menu-column-title {
             color: var(--ji-white);
-            font-size: 1.0625rem;
+            font-size: 1.0625rem;  /* 17px - 2 levels up (12px × 1.44) */
             font-weight: var(--fw-bold);
-            margin-bottom: var(--space-3);
+            margin-bottom: var(--space-1);
             letter-spacing: -0.01em;
         }
         
+        /* Menu Item - Links inside columns */
         .ji-menu-item {
             display: block;
             color: var(--ji-white);
             text-decoration: none;
-            font-size: 0.9375rem;
+            font-size: 1.0rem;  /* 16px - 2 levels up (11px × 1.45) */
             font-weight: var(--fw-medium);
-            padding: var(--space-2) 0;
+            padding: 0.125rem 0;
             transition: all var(--transition-fast);
             position: relative;
-            line-height: 1.6;
-            padding-left: var(--space-4);
+            line-height: 1.5;
+            padding-left: var(--space-2);
         }
         
         .ji-menu-item::before {
@@ -527,59 +527,35 @@
         
         .ji-menu-item:hover {
             color: var(--ji-menu-text-dim);
-            padding-left: var(--space-5);
+            padding-left: var(--space-3);
         }
         
         .ji-menu-item:hover::before {
             opacity: 1;
         }
         
-        /* Single Column Menu Items */
-        .ji-menu-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
-        
-        .ji-menu-link {
-            display: block;
-            color: var(--ji-white);
-            text-decoration: none;
-            font-size: 1.25rem;
-            font-weight: var(--fw-bold);
-            padding: var(--space-6) 0;
-            transition: all var(--transition-fast);
-            border-bottom: 1px solid var(--ji-menu-border);
-            letter-spacing: -0.01em;
-        }
-        
-        .ji-menu-link:hover {
-            color: var(--ji-menu-text-dim);
-            padding-left: var(--space-4);
-        }
-        
         /* Divider */
         .ji-divider {
             height: 1px;
             background: var(--ji-menu-border);
-            margin: var(--space-10) 0;
+            margin: var(--space-4) 0;
         }
         
         /* Mobile CTA */
         .ji-mobile-cta {
             background: var(--ji-white);
             color: var(--ji-black);
-            padding: var(--space-5) var(--space-8);
-            border-radius: var(--radius-xl);
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-md);
             text-decoration: none;
             font-weight: var(--fw-bold);
-            font-size: 1.0625rem;
+            font-size: 0.8125rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--space-3);
+            gap: var(--space-1);
             transition: all var(--transition-fast);
-            margin-top: var(--space-10);
+            margin-top: var(--space-4);
             letter-spacing: 0.01em;
         }
         
@@ -597,9 +573,9 @@
         .ji-mobile-stats {
             display: flex;
             justify-content: center;
-            gap: var(--space-8);
-            margin-top: var(--space-8);
-            padding: var(--space-6) 0;
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+            padding: var(--space-3) 0;
             border-top: 1px solid var(--ji-menu-border);
         }
         
@@ -608,16 +584,16 @@
         }
         
         .ji-stat-number {
-            font-size: 1.75rem;
+            font-size: 1.125rem;
             font-weight: var(--fw-black);
             color: var(--ji-white);
             display: block;
-            margin-bottom: var(--space-1);
+            margin-bottom: 0.125rem;
             letter-spacing: -0.02em;
         }
         
         .ji-stat-label {
-            font-size: 0.6875rem;
+            font-size: 0.5625rem;
             color: var(--ji-menu-text-dim);
             font-weight: var(--fw-semibold);
             letter-spacing: 0.1em;
@@ -628,15 +604,15 @@
         .ji-social-links {
             display: flex;
             justify-content: center;
-            gap: var(--space-4);
-            margin-top: var(--space-10);
-            padding-top: var(--space-10);
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
             border-top: 1px solid var(--ji-menu-border);
         }
         
         .ji-social-link {
-            width: 48px;
-            height: 48px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -644,7 +620,7 @@
             background: rgba(255, 255, 255, 0.08);
             border-radius: var(--radius-full);
             text-decoration: none;
-            font-size: 1.25rem;
+            font-size: 0.875rem;
             transition: all var(--transition-fast);
         }
         
@@ -657,7 +633,7 @@
         /* Footer Info */
         .ji-mobile-footer {
             text-align: center;
-            padding: var(--space-10) var(--space-6);
+            padding: var(--space-4) var(--space-4);
             border-top: 1px solid var(--ji-menu-border);
             background: var(--ji-menu-bg);
         }
@@ -666,18 +642,18 @@
             display: inline-block;
             background: rgba(255, 255, 255, 0.08);
             color: var(--ji-white);
-            padding: var(--space-2) var(--space-4);
+            padding: 0.125rem var(--space-2);
             border-radius: var(--radius-full);
-            font-size: 0.75rem;
+            font-size: 0.625rem;
             font-weight: var(--fw-semibold);
-            margin-bottom: var(--space-4);
+            margin-bottom: var(--space-2);
             letter-spacing: 0.05em;
         }
         
         .ji-footer-text {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: var(--ji-menu-text-dim);
-            line-height: 1.8;
+            line-height: 1.6;
             font-weight: var(--fw-medium);
         }
         
@@ -883,7 +859,7 @@
         <div class="ji-header-inner">
             <!-- Logo -->
             <a href="<?php echo esc_url(home_url('/')); ?>" class="ji-logo" aria-label="<?php bloginfo('name'); ?> ホームページへ">
-                <img src="https://joseikin-insight.com/wp-content/uploads/2025/09/名称未設定のデザイン.png" 
+                <img src="https://joseikin-insight.com/wp-content/uploads/2025/11/cropped-cropped-名称未設定のデザイン１.png" 
                      alt="<?php bloginfo('name'); ?>" 
                      class="ji-logo-image"
                      width="200"
@@ -1122,8 +1098,12 @@
             
             <!-- Knowledge Base -->
             <div class="ji-menu-section">
-                <div class="ji-menu-list">
-                    <a href="<?php echo esc_url(home_url('/knowledge/')); ?>" class="ji-menu-link">助成金の基礎知識</a>
+                <div class="ji-section-label">Knowledge</div>
+                <div class="ji-section-title">助成金の基礎知識</div>
+                
+                <div class="ji-menu-grid">
+                    <a href="<?php echo esc_url(home_url('/knowledge/')); ?>" class="ji-menu-item" style="font-weight: 700;">助成金とは</a>
+                    <a href="<?php echo esc_url(home_url('/knowledge/how-to-apply/')); ?>" class="ji-menu-item" style="font-weight: 700;">申請方法</a>
                 </div>
             </div>
             
@@ -1131,8 +1111,12 @@
             
             <!-- Blog & News -->
             <div class="ji-menu-section">
-                <div class="ji-menu-list">
-                    <a href="<?php echo esc_url(home_url('/blog/')); ?>" class="ji-menu-link">ブログ・お知らせ</a>
+                <div class="ji-section-label">News</div>
+                <div class="ji-section-title">ブログ・お知らせ</div>
+                
+                <div class="ji-menu-grid">
+                    <a href="<?php echo esc_url(home_url('/blog/')); ?>" class="ji-menu-item" style="font-weight: 700;">ブログ</a>
+                    <a href="<?php echo esc_url(home_url('/news/')); ?>" class="ji-menu-item" style="font-weight: 700;">お知らせ</a>
                 </div>
             </div>
             
